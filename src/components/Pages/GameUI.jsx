@@ -7,35 +7,57 @@ import Bulb from "../../assets/Bulb.png";
 const SOLUTION = "LEAVE";
 const rows = 6;
 const cols = 5;
-const TIME_PER_LIFE = 20; // seconds per life
+const TOTAL_GAME_TIME = 120; // total seconds for the whole game
 
 const GameUI = () => {
   const [grid, setGrid] = useState(
-    Array.from({ length: rows }, () => Array(cols).fill(""))
+    () => JSON.parse(localStorage.getItem("ciphercore_grid")) || Array.from({ length: rows }, () => Array(cols).fill(""))
   );
   const [colors, setColors] = useState(
-    Array.from({ length: rows }, () => Array(cols).fill("bg-white/10"))
+    () => JSON.parse(localStorage.getItem("ciphercore_colors")) || Array.from({ length: rows }, () => Array(cols).fill("bg-white/10"))
   );
-  const [activeRow, setActiveRow] = useState(0);
-  const [activeCol, setActiveCol] = useState(0);
+  const [activeRow, setActiveRow] = useState(
+    () => JSON.parse(localStorage.getItem("ciphercore_activeRow")) || 0
+  );
+  const [activeCol, setActiveCol] = useState(
+    () => JSON.parse(localStorage.getItem("ciphercore_activeCol")) || 0
+  );
+  const [lives, setLives] = useState(
+    () => JSON.parse(localStorage.getItem("ciphercore_lives")) || rows
+  );
   const [message, setMessage] = useState("");
-  const [lives, setLives] = useState(rows);
   const [isGameOver, setIsGameOver] = useState(false);
-  const [countdown, setCountdown] = useState(TIME_PER_LIFE);
-  const [totalTime, setTotalTime] = useState(0);
+  const [countdown, setCountdown] = useState(
+    () => JSON.parse(localStorage.getItem("ciphercore_countdown")) || TOTAL_GAME_TIME
+  );
+  const [totalTime, setTotalTime] = useState(
+    () => JSON.parse(localStorage.getItem("ciphercore_totalTime")) || 0
+  );
+
   const timerRef = useRef(null);
   const inputsRef = useRef([]);
   const navigate = useNavigate();
 
-  // ✅ Handle timer logic
+  // ✅ Save game state to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("ciphercore_grid", JSON.stringify(grid));
+    localStorage.setItem("ciphercore_colors", JSON.stringify(colors));
+    localStorage.setItem("ciphercore_activeRow", JSON.stringify(activeRow));
+    localStorage.setItem("ciphercore_activeCol", JSON.stringify(activeCol));
+    localStorage.setItem("ciphercore_lives", JSON.stringify(lives));
+    localStorage.setItem("ciphercore_countdown", JSON.stringify(countdown));
+    localStorage.setItem("ciphercore_totalTime", JSON.stringify(totalTime));
+  }, [grid, colors, activeRow, activeCol, lives, countdown, totalTime]);
+
+  // ✅ Handle global game countdown
   useEffect(() => {
     if (isGameOver) return;
 
     timerRef.current = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
-          handleLifeLoss();
-          return TIME_PER_LIFE;
+          handleGameOver("⏳ Time’s up! Game Over!");
+          return 0;
         }
         return prev - 1;
       });
@@ -43,22 +65,14 @@ const GameUI = () => {
     }, 1000);
 
     return () => clearInterval(timerRef.current);
-  }, [activeRow, isGameOver]);
+  }, [isGameOver]);
 
-  const handleLifeLoss = () => {
-    if (lives > 1) {
-      setLives((prev) => prev - 1);
-      setActiveRow((prev) => prev + 1);
-      setActiveCol(0);
-      setCountdown(TIME_PER_LIFE);
-      setMessage("⏳ Time’s up! You lost one life.");
-      setTimeout(() => setMessage(""), 2000);
-    } else {
-      handleGameOver("❌ Game Over! You got hacked!");
-    }
-  };
+  // ✅ Focus active input
+  useEffect(() => {
+    inputsRef.current[activeRow]?.[activeCol]?.focus();
+  }, [activeRow, activeCol]);
 
-  // ✅ When returning from hint page
+  // ✅ Reveal letter when returning from hint page
   useEffect(() => {
     const storedHint = localStorage.getItem("ciphercore_hint_solved");
     if (storedHint === "true") {
@@ -68,10 +82,6 @@ const GameUI = () => {
       setTimeout(() => setMessage(""), 2000);
     }
   }, []);
-
-  useEffect(() => {
-    inputsRef.current[activeRow]?.[activeCol]?.focus();
-  }, [activeRow, activeCol]);
 
   const handleKeyDown = (e) => {
     if (isGameOver) return;
@@ -201,7 +211,6 @@ const GameUI = () => {
       <div className="absolute top-6 right-6 flex items-center space-x-6 z-20">
         <div className="flex flex-col items-end text-right">
           <span className="text-lg text-cyan-400">⏳ {countdown}s</span>
-          <span className="text-sm text-gray-400">Total: {totalTime}s</span>
           <span className="text-sm text-red-400">❤️ {lives} Lives</span>
         </div>
         <img
