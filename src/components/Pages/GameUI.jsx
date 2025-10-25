@@ -118,7 +118,7 @@ const GameUI = () => {
       } else if (SOLUTION.includes(letter)) {
         newColors[activeRow][i] = "bg-yellow-400/70 text-white font-bold";
       } else {
-        newColors[activeRow][i] = "bg-gray-600/50 text-white font-bold";
+        newColors[activeRow][i] = "bg-red-600/50 text-white font-bold";
       }
     });
 
