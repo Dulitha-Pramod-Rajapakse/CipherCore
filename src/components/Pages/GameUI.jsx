@@ -2,11 +2,12 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Earth from "../../assets/Earth.png";
 import User from "../../assets/User.png";
+import Bulb from "../../assets/Bulb.png";
 
-const SOLUTION = "CODES";
-
+const SOLUTION = "LEAVE";
 const rows = 6;
 const cols = 5;
+const TIME_PER_LIFE = 20; // seconds per life
 
 const GameUI = () => {
   const [grid, setGrid] = useState(
@@ -18,10 +19,46 @@ const GameUI = () => {
   const [activeRow, setActiveRow] = useState(0);
   const [activeCol, setActiveCol] = useState(0);
   const [message, setMessage] = useState("");
+  const [lives, setLives] = useState(rows);
+  const [isGameOver, setIsGameOver] = useState(false);
+  const [countdown, setCountdown] = useState(TIME_PER_LIFE);
+  const [totalTime, setTotalTime] = useState(0);
+  const timerRef = useRef(null);
   const inputsRef = useRef([]);
   const navigate = useNavigate();
 
-  // ✅ Check if hint solved when returning from Hint page
+  // ✅ Handle timer logic
+  useEffect(() => {
+    if (isGameOver) return;
+
+    timerRef.current = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          handleLifeLoss();
+          return TIME_PER_LIFE;
+        }
+        return prev - 1;
+      });
+      setTotalTime((prev) => prev + 1);
+    }, 1000);
+
+    return () => clearInterval(timerRef.current);
+  }, [activeRow, isGameOver]);
+
+  const handleLifeLoss = () => {
+    if (lives > 1) {
+      setLives((prev) => prev - 1);
+      setActiveRow((prev) => prev + 1);
+      setActiveCol(0);
+      setCountdown(TIME_PER_LIFE);
+      setMessage("⏳ Time’s up! You lost one life.");
+      setTimeout(() => setMessage(""), 2000);
+    } else {
+      handleGameOver("❌ Game Over! You got hacked!");
+    }
+  };
+
+  // ✅ When returning from hint page
   useEffect(() => {
     const storedHint = localStorage.getItem("ciphercore_hint_solved");
     if (storedHint === "true") {
@@ -37,6 +74,7 @@ const GameUI = () => {
   }, [activeRow, activeCol]);
 
   const handleKeyDown = (e) => {
+    if (isGameOver) return;
     const key = e.key.toUpperCase();
     if (activeRow >= rows) return;
 
@@ -87,16 +125,25 @@ const GameUI = () => {
     setColors(newColors);
 
     if (rowWord === SOLUTION) {
-      setMessage("🎉 You Successfully Countered The Hacker");
+      handleGameOver("🎉 You Successfully Countered The Hacker!");
     } else if (activeRow < rows - 1) {
       setActiveRow(activeRow + 1);
       setActiveCol(0);
+      setLives((prev) => prev - 1);
+      if (lives - 1 === 0) {
+        handleGameOver("❌ Game Over! You got hacked!");
+      }
     } else {
-      setMessage(`❌ Game over! You got hacked!`);
+      handleGameOver("❌ Game Over! You got hacked!");
     }
   };
 
-  // ✅ Reveal one correct letter randomly
+  const handleGameOver = (msg) => {
+    clearInterval(timerRef.current);
+    setMessage(msg);
+    setIsGameOver(true);
+  };
+
   const revealOneLetter = () => {
     const revealedIndexes = grid[activeRow]
       .map((_, i) => i)
@@ -117,8 +164,8 @@ const GameUI = () => {
     });
   };
 
-  const handleHelp = () => {
-    navigate("/hint");
+  const handleHint = () => {
+    if (!isGameOver) navigate("/hint");
   };
 
   return (
@@ -127,7 +174,7 @@ const GameUI = () => {
       onKeyDown={handleKeyDown}
       className="relative min-h-screen flex flex-col items-center justify-center w-full bg-[#000814] text-white font-[Jacques_Francois_Shadow] overflow-hidden outline-none"
     >
-      {/* Background layers */}
+      {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#000814] via-[#001e40] to-[#000814] opacity-90" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,102,255,0.28)_0%,rgba(0,0,0,0.92)_68%)] pointer-events-none" />
 
@@ -140,7 +187,7 @@ const GameUI = () => {
         />
       </div>
 
-      {/* User Info */}
+      {/* User Info + Lives + Hint */}
       <div className="absolute top-6 left-6 flex items-center space-x-3 z-20">
         <div className="w-10 h-10 rounded-full border border-white flex items-center justify-center overflow-hidden">
           <img src={User} alt="User" className="w-8 h-8 object-contain" />
@@ -151,7 +198,22 @@ const GameUI = () => {
         </div>
       </div>
 
-      {/* Main Content */}
+      <div className="absolute top-6 right-6 flex items-center space-x-6 z-20">
+        <div className="flex flex-col items-end text-right">
+          <span className="text-lg text-cyan-400">⏳ {countdown}s</span>
+          <span className="text-sm text-gray-400">Total: {totalTime}s</span>
+          <span className="text-sm text-red-400">❤️ {lives} Lives</span>
+        </div>
+        <img
+          src={Bulb}
+          alt="Hint"
+          onClick={handleHint}
+          className="w-8 h-8 cursor-pointer hover:brightness-125 transition duration-200"
+          title="Get a Hint"
+        />
+      </div>
+
+      {/* Game Area */}
       <main className="relative z-10 w-full max-w-[420px] flex flex-col items-center px-6 py-10 text-center">
         <h1
           className="text-4xl mb-6 tracking-widest"
@@ -163,7 +225,6 @@ const GameUI = () => {
           CipherCore
         </h1>
 
-        {/* Wordle Board */}
         <div className="bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur-sm shadow-lg w-full">
           {grid.map((row, rowIndex) => (
             <div key={rowIndex} className="flex justify-center gap-3 mb-2">
@@ -186,19 +247,12 @@ const GameUI = () => {
           ))}
         </div>
 
-        {/* Buttons */}
         <div className="flex flex-col md:flex-row gap-4 mt-8 w-full justify-center">
           <button
             onClick={() => window.location.reload()}
             className="flex-1 py-2 text-lg tracking-widest border border-[#00bfff] rounded-md text-white transition-all duration-300 hover:shadow-[0_0_10px_#00bfff,0_0_20px_#00bfff] hover:border-[#00ffff]"
           >
             NEW GAME
-          </button>
-          <button
-            onClick={handleHelp}
-            className="flex-1 py-2 text-lg tracking-widest border border-[#00bfff] rounded-md text-white transition-all duration-300 hover:shadow-[0_0_10px_#00bfff,0_0_20px_#00bfff] hover:border-[#00ffff]"
-          >
-            HELP
           </button>
         </div>
 
