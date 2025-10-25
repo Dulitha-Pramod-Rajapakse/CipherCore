@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import Earth from "../../assets/Earth.png";
 import User from "../../assets/User.png";
 
-const SOLUTION = "CODES"; // 5-letter solution
+const SOLUTION = "CODES";
 
-const rows = 6; // 6 chances
-const cols = 5; // 5 letters
+const rows = 6;
+const cols = 5;
 
 const GameUI = () => {
   const [grid, setGrid] = useState(
@@ -17,8 +18,19 @@ const GameUI = () => {
   const [activeRow, setActiveRow] = useState(0);
   const [activeCol, setActiveCol] = useState(0);
   const [message, setMessage] = useState("");
-
   const inputsRef = useRef([]);
+  const navigate = useNavigate();
+
+  // ✅ Check if hint solved when returning from Hint page
+  useEffect(() => {
+    const storedHint = localStorage.getItem("ciphercore_hint_solved");
+    if (storedHint === "true") {
+      revealOneLetter();
+      localStorage.removeItem("ciphercore_hint_solved");
+      setMessage("💡 Hint Used: One correct letter revealed!");
+      setTimeout(() => setMessage(""), 2000);
+    }
+  }, []);
 
   useEffect(() => {
     inputsRef.current[activeRow]?.[activeCol]?.focus();
@@ -26,7 +38,6 @@ const GameUI = () => {
 
   const handleKeyDown = (e) => {
     const key = e.key.toUpperCase();
-
     if (activeRow >= rows) return;
 
     if (/^[A-Z]$/.test(key)) {
@@ -76,18 +87,38 @@ const GameUI = () => {
     setColors(newColors);
 
     if (rowWord === SOLUTION) {
-      setMessage("🎉 Correct! You solved the word!");
+      setMessage("🎉 You Successfully Countered The Hacker");
     } else if (activeRow < rows - 1) {
       setActiveRow(activeRow + 1);
       setActiveCol(0);
     } else {
-      setMessage(`❌ Game over! The word was ${SOLUTION}`);
+      setMessage(`❌ Game over! You got hacked!`);
     }
   };
 
+  // ✅ Reveal one correct letter randomly
+  const revealOneLetter = () => {
+    const revealedIndexes = grid[activeRow]
+      .map((_, i) => i)
+      .filter((i) => grid[activeRow][i] === SOLUTION[i]);
+
+    const remainingIndexes = SOLUTION.split("")
+      .map((_, i) => i)
+      .filter((i) => !revealedIndexes.includes(i));
+
+    if (remainingIndexes.length === 0) return;
+    const randomIndex =
+      remainingIndexes[Math.floor(Math.random() * remainingIndexes.length)];
+
+    setGrid((prev) => {
+      const newGrid = [...prev];
+      newGrid[activeRow][randomIndex] = SOLUTION[randomIndex];
+      return newGrid;
+    });
+  };
+
   const handleHelp = () => {
-    setMessage("💡 Heart API hint: One letter revealed!");
-    setTimeout(() => setMessage(""), 2000);
+    navigate("/hint");
   };
 
   return (
@@ -171,7 +202,6 @@ const GameUI = () => {
           </button>
         </div>
 
-        {/* Hint / Message */}
         {message && (
           <p className="mt-4 text-cyan-300 text-sm text-center">{message}</p>
         )}
