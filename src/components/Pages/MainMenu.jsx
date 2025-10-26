@@ -20,7 +20,7 @@ const MainMenu = () => {
         />
       </div>
 
-      {/* User Info */}
+      {/* User */}
       <div className="absolute top-6 left-6 flex items-center space-x-3 z-20">
         <div className="w-10 h-10 rounded-full border border-white flex items-center justify-center overflow-hidden">
           <img src={User} alt="User" className="w-8 h-8 object-contain" />

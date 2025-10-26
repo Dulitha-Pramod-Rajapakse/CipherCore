@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react"; 
 import { useNavigate } from "react-router-dom";
 import Earth from "../../assets/Earth.png";
 import User from "../../assets/User.png";
@@ -7,7 +7,7 @@ import Bulb from "../../assets/Bulb.png";
 const SOLUTION = "LEAVE";
 const rows = 6;
 const cols = 5;
-const TOTAL_GAME_TIME = 120; // total seconds for the whole game
+const TOTAL_GAME_TIME = 120; 
 
 const GameUI = () => {
   const [grid, setGrid] = useState(
@@ -38,7 +38,7 @@ const GameUI = () => {
   const inputsRef = useRef([]);
   const navigate = useNavigate();
 
-  // ✅ Save game state to localStorage whenever it changes
+  // Save game state
   useEffect(() => {
     localStorage.setItem("ciphercore_grid", JSON.stringify(grid));
     localStorage.setItem("ciphercore_colors", JSON.stringify(colors));
@@ -49,7 +49,7 @@ const GameUI = () => {
     localStorage.setItem("ciphercore_totalTime", JSON.stringify(totalTime));
   }, [grid, colors, activeRow, activeCol, lives, countdown, totalTime]);
 
-  // ✅ Handle global game countdown
+  // Countdown
   useEffect(() => {
     if (isGameOver) return;
 
@@ -67,12 +67,12 @@ const GameUI = () => {
     return () => clearInterval(timerRef.current);
   }, [isGameOver]);
 
-  // ✅ Focus active input
+  // Focus current input
   useEffect(() => {
     inputsRef.current[activeRow]?.[activeCol]?.focus();
   }, [activeRow, activeCol]);
 
-  // ✅ Reveal letter when returning from hint page
+  // Hint check
   useEffect(() => {
     const storedHint = localStorage.getItem("ciphercore_hint_solved");
     if (storedHint === "true") {
@@ -178,6 +178,41 @@ const GameUI = () => {
     if (!isGameOver) navigate("/hint");
   };
 
+  const handleNewGame = () => {
+    // Clear saved game data
+    localStorage.removeItem("ciphercore_grid");
+    localStorage.removeItem("ciphercore_colors");
+    localStorage.removeItem("ciphercore_activeRow");
+    localStorage.removeItem("ciphercore_activeCol");
+    localStorage.removeItem("ciphercore_lives");
+    localStorage.removeItem("ciphercore_countdown");
+    localStorage.removeItem("ciphercore_totalTime");
+    localStorage.removeItem("ciphercore_hint_solved");
+
+    // Reset all game state
+    setGrid(Array.from({ length: rows }, () => Array(cols).fill("")));
+    setColors(Array.from({ length: rows }, () => Array(cols).fill("bg-white/10")));
+    setActiveRow(0);
+    setActiveCol(0);
+    setLives(rows);
+    setCountdown(TOTAL_GAME_TIME);
+    setTotalTime(0);
+    setMessage("");
+    setIsGameOver(false);
+
+    clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          handleGameOver("⏳ Time’s up! Game Over!");
+          return 0;
+        }
+        return prev - 1;
+      });
+      setTotalTime((prev) => prev + 1);
+    }, 1000);
+  };
+
   return (
     <div
       tabIndex={0}
@@ -197,7 +232,6 @@ const GameUI = () => {
         />
       </div>
 
-      {/* User Info + Lives + Hint */}
       <div className="absolute top-6 left-6 flex items-center space-x-3 z-20">
         <div className="w-10 h-10 rounded-full border border-white flex items-center justify-center overflow-hidden">
           <img src={User} alt="User" className="w-8 h-8 object-contain" />
@@ -222,7 +256,7 @@ const GameUI = () => {
         />
       </div>
 
-      {/* Game Area */}
+      {/* Game */}
       <main className="relative z-10 w-full max-w-[420px] flex flex-col items-center px-6 py-10 text-center">
         <h1
           className="text-4xl mb-6 tracking-widest"
@@ -258,7 +292,7 @@ const GameUI = () => {
 
         <div className="flex flex-col md:flex-row gap-4 mt-8 w-full justify-center">
           <button
-            onClick={() => window.location.reload()}
+            onClick={handleNewGame}
             className="flex-1 py-2 text-lg tracking-widest border border-[#00bfff] rounded-md text-white transition-all duration-300 hover:shadow-[0_0_10px_#00bfff,0_0_20px_#00bfff] hover:border-[#00ffff]"
           >
             NEW GAME
