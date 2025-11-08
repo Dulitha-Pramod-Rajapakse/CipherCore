@@ -9,7 +9,7 @@ const HintPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch("https://marcconrad.com/uob/heart/api.php")
+    fetch("https://marcconrad.com/uob/heart/api.php") 
       .then((res) => res.json())
       .then((data) => {
         setQuestion(data.question);
