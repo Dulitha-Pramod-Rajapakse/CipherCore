@@ -21,7 +21,7 @@ const HintPage = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (parseInt(answer) === solution) {
-      // Store hint flag in localStorage
+      // Store hint 
       localStorage.setItem("ciphercore_hint_solved", "true");
       setMessage("✅ Correct! Returning to game...");
       setTimeout(() => navigate("/game"), 1500);

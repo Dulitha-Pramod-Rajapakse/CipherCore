@@ -28,7 +28,7 @@ const LeaderBoard = () => {
         />
       </div>
 
-      {/* User Info */}
+      {/* User */}
       <div className="absolute top-6 left-6 flex items-center space-x-3 z-20">
         <div className="w-10 h-10 rounded-full border border-white flex items-center justify-center overflow-hidden">
           <img src={User} alt="User" className="w-8 h-8 object-contain" />
@@ -51,7 +51,7 @@ const LeaderBoard = () => {
           Leaderboard
         </h1>
 
-        {/* Leaderboard Table */}
+        {/* Table */}
         <div className="w-full bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur-sm shadow-lg">
           <div className="flex justify-between text-cyan-300 text-sm mb-3 border-b border-cyan-500/30 pb-2">
             <p className="w-1/6 text-center">Rank</p>
