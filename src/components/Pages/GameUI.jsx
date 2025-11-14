@@ -9,7 +9,6 @@ const rows = 6;
 const cols = 5;
 const TOTAL_GAME_TIME = 120;
 
-// Global variable to hold current game word
 export let CURRENT_GAME_WORD = null;
 
 const GameUI = () => {
@@ -49,7 +48,7 @@ const GameUI = () => {
   const inputsRef = useRef([]);
   const navigate = useNavigate();
 
-  // Fetch a random word from Supabase and store in global variable
+  // Fetch word from Supabase
   useEffect(() => {
     const fetchWord = async () => {
       try {
@@ -59,7 +58,7 @@ const GameUI = () => {
           const randomWord =
             data[Math.floor(Math.random() * data.length)].word.toUpperCase();
           setSolution(randomWord);
-          CURRENT_GAME_WORD = randomWord; // set global word
+          CURRENT_GAME_WORD = randomWord;
         } else {
           setMessage("⚠️ No words found in database.");
         }
@@ -98,12 +97,12 @@ const GameUI = () => {
     return () => clearInterval(timerRef.current);
   }, [isGameOver]);
 
-  // Focus current input
+  // Focus active box
   useEffect(() => {
     inputsRef.current[activeRow]?.[activeCol]?.focus();
   }, [activeRow, activeCol]);
 
-  // Autofill hint check
+  // Hints
   useEffect(() => {
     const storedHint = localStorage.getItem("ciphercore_hint_solved");
     const autofillLetter = localStorage.getItem("ciphercore_autofill_letter");
@@ -135,6 +134,7 @@ const GameUI = () => {
     }
   }, [solution, activeRow, grid]);
 
+  // Keyboard input
   const handleKeyDown = (e) => {
     if (isGameOver || !solution) return;
     const key = e.key.toUpperCase();
@@ -170,6 +170,7 @@ const GameUI = () => {
     }
   };
 
+  // Check row
   const checkWord = () => {
     if (!solution) return;
     const rowWord = grid[activeRow].join("");
@@ -201,70 +202,48 @@ const GameUI = () => {
     }
   };
 
-  const handleGameOver = (msg) => {
+  // Score updates correctly on win
+  const handleGameOver = async (msg) => {
     clearInterval(timerRef.current);
     setMessage(msg);
     setIsGameOver(true);
+
+    // If the message starts with the celebration emoji → player won
+    const playerWon = msg.trim().startsWith("🎉");
+
+    if (playerWon) {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          console.error("No user found");
+          return;
+        }
+
+        const { error } = await supabase.rpc("increase_score", {
+          user_id: user.id,
+          points: 100,
+        });
+
+        if (error) {
+          console.error("Score update failed:", error);
+        } else {
+          console.log("Score updated by +100 for:", user.id);
+        }
+
+      } catch (err) {
+        console.error("Exception during score update:", err);
+      }
+    }
   };
 
-  const revealOneLetter = () => {
-    if (!solution) return;
-    const revealedIndexes = grid[activeRow]
-      .map((_, i) => i)
-      .filter((i) => grid[activeRow][i] === solution[i]);
-
-    const remainingIndexes = solution
-      .split("")
-      .map((_, i) => i)
-      .filter((i) => !revealedIndexes.includes(i));
-
-    if (remainingIndexes.length === 0) return;
-    const randomIndex =
-      remainingIndexes[Math.floor(Math.random() * remainingIndexes.length)];
-
-    setGrid((prev) => {
-      const newGrid = [...prev];
-      newGrid[activeRow][randomIndex] = solution[randomIndex];
-      return newGrid;
-    });
-  };
 
   const handleHint = () => {
     if (!isGameOver) navigate("/hint");
   };
 
   const handleNewGame = () => {
-    localStorage.removeItem("ciphercore_grid");
-    localStorage.removeItem("ciphercore_colors");
-    localStorage.removeItem("ciphercore_activeRow");
-    localStorage.removeItem("ciphercore_activeCol");
-    localStorage.removeItem("ciphercore_lives");
-    localStorage.removeItem("ciphercore_countdown");
-    localStorage.removeItem("ciphercore_totalTime");
-    localStorage.removeItem("ciphercore_hint_solved");
-    localStorage.removeItem("ciphercore_autofill_letter");
-
-    setGrid(Array.from({ length: rows }, () => Array(cols).fill("")));
-    setColors(Array.from({ length: rows }, () => Array(cols).fill("bg-white/10")));
-    setActiveRow(0);
-    setActiveCol(0);
-    setLives(rows);
-    setCountdown(TOTAL_GAME_TIME);
-    setTotalTime(0);
-    setMessage("");
-    setIsGameOver(false);
-
-    clearInterval(timerRef.current);
-    timerRef.current = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          handleGameOver("⏳ Time’s up! Game Over!");
-          return 0;
-        }
-        return prev - 1;
-      });
-      setTotalTime((prev) => prev + 1);
-    }, 1000);
+    localStorage.clear();
+    window.location.reload();
   };
 
   return (
@@ -273,11 +252,11 @@ const GameUI = () => {
       onKeyDown={handleKeyDown}
       className="relative min-h-screen flex flex-col items-center justify-center w-full bg-[#000814] text-white font-[Jacques_Francois_Shadow] overflow-hidden outline-none"
     >
-{/* Background */}
+      {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#000814] via-[#001e40] to-[#000814] opacity-90" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,102,255,0.28)_0%,rgba(0,0,0,0.92)_68%)] pointer-events-none" />
 
-      {/* Earth Glow */}
+      {/* Earth */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-20 pointer-events-none">
         <img
           src={Earth}
@@ -286,6 +265,7 @@ const GameUI = () => {
         />
       </div>
 
+      {/* Top Left User */}
       <div className="absolute top-6 left-6 flex items-center space-x-3 z-20">
         <div className="w-10 h-10 rounded-full border border-white flex items-center justify-center overflow-hidden">
           <img src={User} alt="User" className="w-8 h-8 object-contain" />
@@ -296,6 +276,7 @@ const GameUI = () => {
         </div>
       </div>
 
+      {/* Timer + Lives + Hint */}
       <div className="absolute top-6 right-6 flex items-center space-x-6 z-20">
         <div className="flex flex-col items-end text-right">
           <span className="text-lg text-cyan-400">⏳ {countdown}s</span>
@@ -348,14 +329,12 @@ const GameUI = () => {
           </div>
         )}
 
-        <div className="flex flex-col md:flex-row gap-4 mt-8 w-full justify-center">
-          <button
-            onClick={handleNewGame}
-            className="flex-1 py-2 text-lg tracking-widest border border-[#00bfff] rounded-md text-white transition-all duration-300 hover:shadow-[0_0_10px_#00bfff,0_0_20px_#00bfff] hover:border-[#00ffff]"
-          >
-            NEW GAME
-          </button>
-        </div>
+        <button
+          onClick={handleNewGame}
+          className="mt-8 w-full py-2 text-lg tracking-widest border border-[#00bfff] rounded-md text-white transition-all duration-300 hover:shadow-[0_0_10px_#00bfff,0_0_20px_#00bfff] hover:border-[#00ffff]"
+        >
+          NEW GAME
+        </button>
 
         {message && (
           <p className="mt-4 text-cyan-300 text-sm text-center">{message}</p>
@@ -368,4 +347,3 @@ const GameUI = () => {
 };
 
 export default GameUI;
-

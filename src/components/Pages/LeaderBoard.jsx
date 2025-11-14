@@ -1,16 +1,41 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Earth from "../../assets/Earth.png";
 import User from "../../assets/User.png";
 import { Link } from "react-router-dom";
+import { supabase } from "../../supabaseClient";
 
 const LeaderBoard = () => {
-  const players = [
-    { id: 1, name: "DARK_KNIGHT", score: 980 },
-    { id: 2, name: "LUNA_STRIKE", score: 910 },
-    { id: 3, name: "CYBER_FOX", score: 890 },
-    { id: 4, name: "OMEGA_404", score: 860 },
-    { id: 5, name: "VOID_RUNNER", score: 820 },
-  ];
+  const [players, setPlayers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+// Fetch leaderboard data
+const fetchLeaderboard = async () => {
+  try {
+    const { data, error } = await supabase
+      .from("users")
+      .select("username, score")
+      .order("score", { ascending: false });
+
+    console.log("Supabase response:", { data, error }); // debug log
+
+    if (error) {
+      console.error("Supabase error:", error);
+    } else if (!data || data.length === 0) {
+      console.warn("No data returned from Supabase");
+    } else {
+      setPlayers(data);
+    }
+  } catch (err) {
+    console.error("Unexpected error:", err);
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+  useEffect(() => {
+    fetchLeaderboard();
+  }, []);
 
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center w-full bg-[#000814] text-white font-[Jacques_Francois_Shadow] overflow-hidden">
@@ -34,8 +59,8 @@ const LeaderBoard = () => {
           <img src={User} alt="User" className="w-8 h-8 object-contain" />
         </div>
         <div className="text-sm leading-tight">
-          <p className="tracking-wider">DARK_KNIGHT</p>
-          <p className="text-xs text-gray-400">#0069</p>
+          <p className="tracking-wider">PLAYER</p>
+          <p className="text-xs text-gray-400">#0001</p>
         </div>
       </div>
 
@@ -58,20 +83,25 @@ const LeaderBoard = () => {
             <p className="w-2/3 text-center">Player</p>
             <p className="w-1/6 text-center">Score</p>
           </div>
-          {players.map((player, index) => (
-            <div
-              key={player.id}
-              className={`flex justify-between items-center mb-2 py-2 rounded-md transition-all duration-300 ${
-                index === 0
-                  ? "bg-cyan-500/20 border border-cyan-400/40 shadow-[0_0_10px_#00bfff]"
-                  : "hover:bg-white/10"
-              }`}
-            >
-              <p className="w-1/6 text-center">{index + 1}</p>
-              <p className="w-2/3 text-center tracking-wider">{player.name}</p>
-              <p className="w-1/6 text-center">{player.score}</p>
-            </div>
-          ))}
+
+          {loading ? (
+            <p className="text-center text-gray-400 py-4">Loading...</p>
+          ) : (
+            players.map((player, index) => (
+              <div
+                key={index}
+                className={`flex justify-between items-center mb-2 py-2 rounded-md transition-all duration-300 ${
+                  index === 0
+                    ? "bg-cyan-500/20 border border-cyan-400/40 shadow-[0_0_10px_#00bfff]"
+                    : "hover:bg-white/10"
+                }`}
+              >
+                <p className="w-1/6 text-center">{index + 1}</p>
+                <p className="w-2/3 text-center tracking-wider">{player.username}</p>
+                <p className="w-1/6 text-center">{player.score}</p>
+              </div>
+            ))
+          )}
         </div>
 
         {/* Buttons */}
@@ -83,7 +113,7 @@ const LeaderBoard = () => {
             PLAY AGAIN
           </Link>
           <Link
-            to="/main"
+            to="/MainMenu"
             className="flex-1 py-2 text-lg tracking-widest border border-[#00bfff] rounded-md text-white text-center transition-all duration-300 hover:shadow-[0_0_10px_#00bfff,0_0_20px_#00bfff] hover:border-[#00ffff]"
           >
             MENU

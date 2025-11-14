@@ -9,21 +9,50 @@ const Signin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleSignup = async () => {
-    const { data, error } = await supabase.auth.signUp({
-      email: email,
-      password: password,
-    });
+const handleSignup = async (e) => {
+  e.preventDefault();
 
-    if (error) {
-      alert(error.message);
-    } else {
-      navigate("/login");
+  // Sign up in Supabase Auth
+  const { data, error } = await supabase.auth.signUp({
+    email: email,
+    password: password,
+  });
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  const user = data.user;
+
+  if (!user) {
+    alert("Signup failed. Try again.");
+    return;
+  }
+
+  // Insert user into 'users' table
+  const { error: insertError } = await supabase.from("users").insert([
+    {
+      auth_id: user.id,   // Links this row to auth.users
+      username: username,
+      email: email,
+      score: 0            // initial leaderboard score
     }
-  };
+  ]);
+
+  if (insertError) {
+    alert(insertError.message);
+    return;
+  }
+
+  // Navigate to login
+  navigate("/login");
+};
+
 
   return (
-    <Layout>
+    <form className="relative min-h-screen flex flex-col items-center justify-center w-full bg-[#000814] text-white font-[Jacques_Francois_Shadow] overflow-hidden">
+      <Layout>
       <h1
         className="text-4xl mb-10 tracking-widest"
         style={{
@@ -36,10 +65,11 @@ const Signin = () => {
 
       <input
         type="text"
-        placeholder="Username (optional)"
+        placeholder="Username"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
         className="w-64 px-4 py-2 mb-4 bg-transparent border border-[#00bfff] rounded-md text-white placeholder-gray-400 focus:outline-none"
+        required
       />
 
       <input
@@ -48,6 +78,7 @@ const Signin = () => {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         className="w-64 px-4 py-2 mb-4 bg-transparent border border-[#00bfff] rounded-md text-white placeholder-gray-400 focus:outline-none"
+        required
       />
 
       <input
@@ -56,9 +87,11 @@ const Signin = () => {
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         className="w-64 px-4 py-2 mb-6 bg-transparent border border-[#00bfff] rounded-md text-white placeholder-gray-400 focus:outline-none"
+        required
       />
 
       <button
+      type="button"
         onClick={handleSignup}
         className="w-64 py-2 text-center border border-[#00bfff] rounded-md text-white tracking-widest transition-all duration-300 hover:shadow-[0_0_15px_#00bfff]"
       >
@@ -72,6 +105,7 @@ const Signin = () => {
         </Link>
       </p>
     </Layout>
+    </form>
   );
 };
 
