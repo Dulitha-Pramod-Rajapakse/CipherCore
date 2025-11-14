@@ -1,20 +1,28 @@
-import React, { useState, useEffect, useRef } from "react"; 
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "../../supabaseClient";
 import Earth from "../../assets/Earth.png";
 import User from "../../assets/User.png";
 import Bulb from "../../assets/Bulb.png";
 
-const SOLUTION = "LEAVE";
 const rows = 6;
 const cols = 5;
-const TOTAL_GAME_TIME = 120; 
+const TOTAL_GAME_TIME = 120;
+
+// Global variable to hold current game word
+export let CURRENT_GAME_WORD = null;
 
 const GameUI = () => {
+  const [solution, setSolution] = useState(null);
   const [grid, setGrid] = useState(
-    () => JSON.parse(localStorage.getItem("ciphercore_grid")) || Array.from({ length: rows }, () => Array(cols).fill(""))
+    () =>
+      JSON.parse(localStorage.getItem("ciphercore_grid")) ||
+      Array.from({ length: rows }, () => Array(cols).fill(""))
   );
   const [colors, setColors] = useState(
-    () => JSON.parse(localStorage.getItem("ciphercore_colors")) || Array.from({ length: rows }, () => Array(cols).fill("bg-white/10"))
+    () =>
+      JSON.parse(localStorage.getItem("ciphercore_colors")) ||
+      Array.from({ length: rows }, () => Array(cols).fill("bg-white/10"))
   );
   const [activeRow, setActiveRow] = useState(
     () => JSON.parse(localStorage.getItem("ciphercore_activeRow")) || 0
@@ -28,15 +36,40 @@ const GameUI = () => {
   const [message, setMessage] = useState("");
   const [isGameOver, setIsGameOver] = useState(false);
   const [countdown, setCountdown] = useState(
-    () => JSON.parse(localStorage.getItem("ciphercore_countdown")) || TOTAL_GAME_TIME
+    () =>
+      JSON.parse(localStorage.getItem("ciphercore_countdown")) ||
+      TOTAL_GAME_TIME
   );
   const [totalTime, setTotalTime] = useState(
-    () => JSON.parse(localStorage.getItem("ciphercore_totalTime")) || 0
+    () =>
+      JSON.parse(localStorage.getItem("ciphercore_totalTime")) || 0
   );
 
   const timerRef = useRef(null);
   const inputsRef = useRef([]);
   const navigate = useNavigate();
+
+  // Fetch a random word from Supabase and store in global variable
+  useEffect(() => {
+    const fetchWord = async () => {
+      try {
+        const { data, error } = await supabase.from("words").select("word");
+        if (error) throw error;
+        if (data && data.length > 0) {
+          const randomWord =
+            data[Math.floor(Math.random() * data.length)].word.toUpperCase();
+          setSolution(randomWord);
+          CURRENT_GAME_WORD = randomWord; // set global word
+        } else {
+          setMessage("⚠️ No words found in database.");
+        }
+      } catch (err) {
+        console.error("Error fetching word:", err);
+        setMessage("⚠️ Failed to load word.");
+      }
+    };
+    fetchWord();
+  }, []);
 
   // Save game state
   useEffect(() => {
@@ -52,7 +85,6 @@ const GameUI = () => {
   // Countdown
   useEffect(() => {
     if (isGameOver) return;
-
     timerRef.current = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
@@ -63,7 +95,6 @@ const GameUI = () => {
       });
       setTotalTime((prev) => prev + 1);
     }, 1000);
-
     return () => clearInterval(timerRef.current);
   }, [isGameOver]);
 
@@ -72,19 +103,40 @@ const GameUI = () => {
     inputsRef.current[activeRow]?.[activeCol]?.focus();
   }, [activeRow, activeCol]);
 
-  // Hint check
+  // Autofill hint check
   useEffect(() => {
     const storedHint = localStorage.getItem("ciphercore_hint_solved");
-    if (storedHint === "true") {
-      revealOneLetter();
+    const autofillLetter = localStorage.getItem("ciphercore_autofill_letter");
+
+    if (storedHint === "true" && solution && autofillLetter) {
+      const remainingIndexes = solution
+        .split("")
+        .map((_, i) => i)
+        .filter((i) => grid[activeRow][i] !== solution[i]);
+
+      if (remainingIndexes.length > 0) {
+        const targetIndexes = remainingIndexes.filter(
+          (i) => solution[i] === autofillLetter
+        );
+        if (targetIndexes.length > 0) {
+          const index = targetIndexes[0];
+          setGrid((prev) => {
+            const newGrid = [...prev];
+            newGrid[activeRow][index] = autofillLetter;
+            return newGrid;
+          });
+          setMessage("💡 Hint Used: One correct letter revealed!");
+          setTimeout(() => setMessage(""), 2000);
+        }
+      }
+
       localStorage.removeItem("ciphercore_hint_solved");
-      setMessage("💡 Hint Used: One correct letter revealed!");
-      setTimeout(() => setMessage(""), 2000);
+      localStorage.removeItem("ciphercore_autofill_letter");
     }
-  }, []);
+  }, [solution, activeRow, grid]);
 
   const handleKeyDown = (e) => {
-    if (isGameOver) return;
+    if (isGameOver || !solution) return;
     const key = e.key.toUpperCase();
     if (activeRow >= rows) return;
 
@@ -119,13 +171,14 @@ const GameUI = () => {
   };
 
   const checkWord = () => {
+    if (!solution) return;
     const rowWord = grid[activeRow].join("");
     const newColors = [...colors];
 
     rowWord.split("").forEach((letter, i) => {
-      if (letter === SOLUTION[i]) {
+      if (letter === solution[i]) {
         newColors[activeRow][i] = "bg-green-500/70 text-white font-bold";
-      } else if (SOLUTION.includes(letter)) {
+      } else if (solution.includes(letter)) {
         newColors[activeRow][i] = "bg-yellow-400/70 text-white font-bold";
       } else {
         newColors[activeRow][i] = "bg-red-600/50 text-white font-bold";
@@ -134,7 +187,7 @@ const GameUI = () => {
 
     setColors(newColors);
 
-    if (rowWord === SOLUTION) {
+    if (rowWord === solution) {
       handleGameOver("🎉 You Successfully Countered The Hacker!");
     } else if (activeRow < rows - 1) {
       setActiveRow(activeRow + 1);
@@ -155,11 +208,13 @@ const GameUI = () => {
   };
 
   const revealOneLetter = () => {
+    if (!solution) return;
     const revealedIndexes = grid[activeRow]
       .map((_, i) => i)
-      .filter((i) => grid[activeRow][i] === SOLUTION[i]);
+      .filter((i) => grid[activeRow][i] === solution[i]);
 
-    const remainingIndexes = SOLUTION.split("")
+    const remainingIndexes = solution
+      .split("")
       .map((_, i) => i)
       .filter((i) => !revealedIndexes.includes(i));
 
@@ -169,7 +224,7 @@ const GameUI = () => {
 
     setGrid((prev) => {
       const newGrid = [...prev];
-      newGrid[activeRow][randomIndex] = SOLUTION[randomIndex];
+      newGrid[activeRow][randomIndex] = solution[randomIndex];
       return newGrid;
     });
   };
@@ -179,7 +234,6 @@ const GameUI = () => {
   };
 
   const handleNewGame = () => {
-    // Clear saved game data
     localStorage.removeItem("ciphercore_grid");
     localStorage.removeItem("ciphercore_colors");
     localStorage.removeItem("ciphercore_activeRow");
@@ -188,8 +242,8 @@ const GameUI = () => {
     localStorage.removeItem("ciphercore_countdown");
     localStorage.removeItem("ciphercore_totalTime");
     localStorage.removeItem("ciphercore_hint_solved");
+    localStorage.removeItem("ciphercore_autofill_letter");
 
-    // Reset all game state
     setGrid(Array.from({ length: rows }, () => Array(cols).fill("")));
     setColors(Array.from({ length: rows }, () => Array(cols).fill("bg-white/10")));
     setActiveRow(0);
@@ -219,7 +273,7 @@ const GameUI = () => {
       onKeyDown={handleKeyDown}
       className="relative min-h-screen flex flex-col items-center justify-center w-full bg-[#000814] text-white font-[Jacques_Francois_Shadow] overflow-hidden outline-none"
     >
-      {/* Background */}
+{/* Background */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#000814] via-[#001e40] to-[#000814] opacity-90" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,102,255,0.28)_0%,rgba(0,0,0,0.92)_68%)] pointer-events-none" />
 
@@ -268,27 +322,31 @@ const GameUI = () => {
           CipherCore
         </h1>
 
-        <div className="bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur-sm shadow-lg w-full">
-          {grid.map((row, rowIndex) => (
-            <div key={rowIndex} className="flex justify-center gap-3 mb-2">
-              {row.map((cell, colIndex) => (
-                <input
-                  key={colIndex}
-                  ref={(el) => {
-                    if (!inputsRef.current[rowIndex])
-                      inputsRef.current[rowIndex] = [];
-                    inputsRef.current[rowIndex][colIndex] = el;
-                  }}
-                  type="text"
-                  maxLength={1}
-                  value={cell}
-                  readOnly
-                  className={`w-14 h-14 text-center rounded-md border border-white/20 ${colors[rowIndex][colIndex]} text-2xl font-bold uppercase focus:outline-none`}
-                />
-              ))}
-            </div>
-          ))}
-        </div>
+        {!solution ? (
+          <p className="text-cyan-300 text-sm">Loading word...</p>
+        ) : (
+          <div className="bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur-sm shadow-lg w-full">
+            {grid.map((row, rowIndex) => (
+              <div key={rowIndex} className="flex justify-center gap-3 mb-2">
+                {row.map((cell, colIndex) => (
+                  <input
+                    key={colIndex}
+                    ref={(el) => {
+                      if (!inputsRef.current[rowIndex])
+                        inputsRef.current[rowIndex] = [];
+                      inputsRef.current[rowIndex][colIndex] = el;
+                    }}
+                    type="text"
+                    maxLength={1}
+                    value={cell}
+                    readOnly
+                    className={`w-14 h-14 text-center rounded-md border border-white/20 ${colors[rowIndex][colIndex]} text-2xl font-bold uppercase focus:outline-none`}
+                  />
+                ))}
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className="flex flex-col md:flex-row gap-4 mt-8 w-full justify-center">
           <button
@@ -310,3 +368,4 @@ const GameUI = () => {
 };
 
 export default GameUI;
+

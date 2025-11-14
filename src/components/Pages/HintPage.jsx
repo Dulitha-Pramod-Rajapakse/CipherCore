@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { CURRENT_GAME_WORD } from "../Pages/GameUI";
 
 const HintPage = () => {
   const [question, setQuestion] = useState("");
@@ -21,8 +22,14 @@ const HintPage = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (parseInt(answer) === solution) {
-      // Store hint 
       localStorage.setItem("ciphercore_hint_solved", "true");
+
+      if (CURRENT_GAME_WORD) {
+        const randomIndex = Math.floor(Math.random() * CURRENT_GAME_WORD.length);
+        const letter = CURRENT_GAME_WORD[randomIndex];
+        localStorage.setItem("ciphercore_autofill_letter", letter);
+      }
+
       setMessage("✅ Correct! Returning to game...");
       setTimeout(() => navigate("/game"), 1500);
     } else {

@@ -1,8 +1,27 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import Layout from "../../components/Layout/Layout";
+import { supabase } from "../../supabaseClient";
 
 const Signin = () => {
+  const navigate = useNavigate();
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const handleSignup = async () => {
+    const { data, error } = await supabase.auth.signUp({
+      email: email,
+      password: password,
+    });
+
+    if (error) {
+      alert(error.message);
+    } else {
+      navigate("/login");
+    }
+  };
+
   return (
     <Layout>
       <h1
@@ -17,26 +36,34 @@ const Signin = () => {
 
       <input
         type="text"
-        placeholder="Username"
+        placeholder="Username (optional)"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
         className="w-64 px-4 py-2 mb-4 bg-transparent border border-[#00bfff] rounded-md text-white placeholder-gray-400 focus:outline-none"
       />
+
       <input
         type="email"
         placeholder="Email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
         className="w-64 px-4 py-2 mb-4 bg-transparent border border-[#00bfff] rounded-md text-white placeholder-gray-400 focus:outline-none"
       />
+
       <input
         type="password"
         placeholder="Password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
         className="w-64 px-4 py-2 mb-6 bg-transparent border border-[#00bfff] rounded-md text-white placeholder-gray-400 focus:outline-none"
       />
 
-      <Link
-        to="/main"
+      <button
+        onClick={handleSignup}
         className="w-64 py-2 text-center border border-[#00bfff] rounded-md text-white tracking-widest transition-all duration-300 hover:shadow-[0_0_15px_#00bfff]"
       >
         CREATE ACCOUNT
-      </Link>
+      </button>
 
       <p className="mt-6 text-sm text-gray-400">
         Already have an account?{" "}
