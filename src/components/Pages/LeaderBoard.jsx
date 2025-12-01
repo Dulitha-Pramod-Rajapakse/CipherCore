@@ -1,40 +1,76 @@
 import React, { useEffect, useState } from "react";
 import Earth from "../../assets/Earth.png";
-import User from "../../assets/User.png";
+import UserIcon from "../../assets/User.png";
 import { Link } from "react-router-dom";
 import { supabase } from "../../supabaseClient";
 
 const LeaderBoard = () => {
+  //________________________________________________________________________
+  //state for players
   const [players, setPlayers] = useState([]);
   const [loading, setLoading] = useState(true);
 
-// Fetch leaderboard data
-const fetchLeaderboard = async () => {
-  try {
+  // Current user info
+  const [currentUser, setCurrentUser] = useState({
+    username: "Guest",
+    id: "0000",
+  });
+
+  // Fetch logged-in user info
+  const fetchCurrentUser = async () => {
+    const { data: authData } = await supabase.auth.getUser();
+
+    const loggedUser = authData?.user;
+
+    if (!loggedUser) {
+      setCurrentUser({ username: "Guest", id: "0000" });
+      return;
+    }
+
+    // Fetch user data from DB
     const { data, error } = await supabase
       .from("users")
-      .select("username, score")
-      .order("score", { ascending: false });
+      .select("id, username")
+      .eq("email", loggedUser.email)
+      .single();
 
-    console.log("Supabase response:", { data, error }); // debug log
-
-    if (error) {
-      console.error("Supabase error:", error);
-    } else if (!data || data.length === 0) {
-      console.warn("No data returned from Supabase");
+    if (error || !data) {
+      setCurrentUser({ username: "Guest", id: "0000" });
     } else {
-      setPlayers(data);
+      setCurrentUser({
+        username: data.username,
+        id: data.id.toString().padStart(4, "0"), // Convert 1 → 0001
+      });
     }
-  } catch (err) {
-    console.error("Unexpected error:", err);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
+  // Fetch leaderboard data
+  const fetchLeaderboard = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("users")
+        .select("username, score")
+        .order("score", { ascending: false });
+
+      console.log("Supabase response:", { data, error });
+
+      if (error) {
+        console.error("Supabase error:", error);
+      } else if (!data || data.length === 0) {
+        console.warn("No data returned from Supabase");
+      } else {
+        setPlayers(data);
+      }
+    } catch (err) {
+      console.error("Unexpected error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchLeaderboard();
+    fetchCurrentUser();
   }, []);
 
   return (
@@ -53,14 +89,14 @@ const fetchLeaderboard = async () => {
         />
       </div>
 
-      {/* User */}
+      {/* Logged User Display */}
       <div className="absolute top-6 left-6 flex items-center space-x-3 z-20">
         <div className="w-10 h-10 rounded-full border border-white flex items-center justify-center overflow-hidden">
-          <img src={User} alt="User" className="w-8 h-8 object-contain" />
+          <img src={UserIcon} alt="User" className="w-8 h-8 object-contain" />
         </div>
         <div className="text-sm leading-tight">
-          <p className="tracking-wider">PLAYER</p>
-          <p className="text-xs text-gray-400">#0001</p>
+          <p className="tracking-wider">{currentUser.username}</p>
+          <p className="text-xs text-gray-400">#{currentUser.id}</p>
         </div>
       </div>
 
@@ -112,6 +148,7 @@ const fetchLeaderboard = async () => {
           >
             PLAY AGAIN
           </Link>
+
           <Link
             to="/MainMenu"
             className="flex-1 py-2 text-lg tracking-widest border border-[#00bfff] rounded-md text-white text-center transition-all duration-300 hover:shadow-[0_0_10px_#00bfff,0_0_20px_#00bfff] hover:border-[#00ffff]"

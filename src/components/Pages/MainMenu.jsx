@@ -26,8 +26,8 @@ const MainMenu = () => {
           <img src={User} alt="User" className="w-8 h-8 object-contain" />
         </div>
         <div className="text-sm leading-tight">
-          <p className="tracking-wider">DARK_KNIGHT</p>
-          <p className="text-xs text-gray-400">#0069</p>
+          {/* <p className="tracking-wider">DARK_KNIGHT</p>
+          <p className="text-xs text-gray-400">#0069</p> */}
         </div>
       </div>
 

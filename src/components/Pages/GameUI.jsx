@@ -4,6 +4,7 @@ import { supabase } from "../../supabaseClient";
 import Earth from "../../assets/Earth.png";
 import User from "../../assets/User.png";
 import Bulb from "../../assets/Bulb.png";
+import { Link } from "react-router-dom";
 
 const rows = 6;
 const cols = 5;
@@ -47,6 +48,25 @@ const GameUI = () => {
   const timerRef = useRef(null);
   const inputsRef = useRef([]);
   const navigate = useNavigate();
+
+  // NEW: Player name + tag
+  const [playerName, setPlayerName] = useState("Guest");
+  const [playerTag, setPlayerTag] = useState("#0000");
+
+  // NEW: Load the logged-in user
+  useEffect(() => {
+    const loadUserData = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (user) {
+        const name = user.email ? user.email.split("@")[0] : "Player";
+        const tag = "#" + user.id.slice(-4);
+        setPlayerName(name.toUpperCase());
+        setPlayerTag(tag);
+      }
+    };
+    loadUserData();
+  }, []);
 
   // Fetch word from Supabase
   useEffect(() => {
@@ -202,40 +222,30 @@ const GameUI = () => {
     }
   };
 
-  // Score updates correctly on win
+  // Score update
   const handleGameOver = async (msg) => {
     clearInterval(timerRef.current);
     setMessage(msg);
     setIsGameOver(true);
 
-    // If the message starts with the celebration emoji → player won
     const playerWon = msg.trim().startsWith("🎉");
 
     if (playerWon) {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          console.error("No user found");
-          return;
-        }
+        if (!user) return;
 
         const { error } = await supabase.rpc("increase_score", {
           user_id: user.id,
           points: 100,
         });
 
-        if (error) {
-          console.error("Score update failed:", error);
-        } else {
-          console.log("Score updated by +100 for:", user.id);
-        }
-
+        if (error) console.error("Score update failed:", error);
       } catch (err) {
         console.error("Exception during score update:", err);
       }
     }
   };
-
 
   const handleHint = () => {
     if (!isGameOver) navigate("/hint");
@@ -271,8 +281,8 @@ const GameUI = () => {
           <img src={User} alt="User" className="w-8 h-8 object-contain" />
         </div>
         <div className="text-sm leading-tight">
-          <p className="tracking-wider">DARK_KNIGHT</p>
-          <p className="text-xs text-gray-400">#0069</p>
+          <p className="tracking-wider">{playerName}</p>
+          <p className="text-xs text-gray-400">{playerTag}</p>
         </div>
       </div>
 
@@ -335,6 +345,13 @@ const GameUI = () => {
         >
           NEW GAME
         </button>
+
+        <Link
+          to="/MainMenu"
+          className="mt-8 w-full py-2 text-lg tracking-widest border border-[#00bfff] rounded-md text-white transition-all duration-300 hover:shadow-[0_0_10px_#00bfff,0_0_20px_#00bfff] hover:border-[#00ffff]"
+        >
+          Main Menu
+        </Link>
 
         {message && (
           <p className="mt-4 text-cyan-300 text-sm text-center">{message}</p>
