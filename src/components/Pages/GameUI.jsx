@@ -223,38 +223,57 @@ const GameUI = () => {
   };
 
   // Score update
-  const handleGameOver = async (msg) => {
-    clearInterval(timerRef.current);
-    setMessage(msg);
-    setIsGameOver(true);
+const handleGameOver = async (msg) => {
+  clearInterval(timerRef.current);
+  setMessage(msg);
+  setIsGameOver(true);
 
-    const playerWon = msg.trim().startsWith("🎉");
+  const playerWon = msg.trim().startsWith("🎉");
 
-    if (playerWon) {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+  if (!playerWon) return;
 
-        const { error } = await supabase.rpc("increase_score", {
-          user_id: user.id,
-          points: 100,
-        });
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
 
-        if (error) console.error("Score update failed:", error);
-      } catch (err) {
-        console.error("Exception during score update:", err);
-      }
-    }
-  };
+  const { data,error } = await supabase.rpc("increase_score", {
+    user_id: user.id,
+    points: 100
+  });
+
+  console.log("RPC data:", data);
+  console.log("RPC error:", error);
+
+  if (error) {
+    console.error("Score update failed:", error);
+  } else {
+    console.log("Score updated successfully");
+  }
+};
+
+
 
   const handleHint = () => {
     if (!isGameOver) navigate("/hint");
   };
 
   const handleNewGame = () => {
-    localStorage.clear();
-    window.location.reload();
-  };
+  const gameKeys = [
+    "ciphercore_grid",
+    "ciphercore_colors",
+    "ciphercore_activeRow",
+    "ciphercore_activeCol",
+    "ciphercore_lives",
+    "ciphercore_countdown",
+    "ciphercore_totalTime",
+    "ciphercore_hint_solved",
+    "ciphercore_autofill_letter"
+  ];
+
+  gameKeys.forEach((key) => localStorage.removeItem(key));
+
+  window.location.reload();
+};
+
 
   return (
     <div

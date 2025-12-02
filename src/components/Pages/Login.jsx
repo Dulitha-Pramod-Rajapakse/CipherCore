@@ -68,6 +68,15 @@ const Login = () => {
       >
         PLAY AS GUEST
       </Link>
+
+      <div className="flex flex-col md:flex-row gap-4 mt-8 w-full justify-center">
+        <Link
+          to="/MainMenu"
+          className="flex-1 py-2 text-lg tracking-widest border border-[#00bfff] rounded-md text-white text-center transition-all duration-300 hover:shadow-[0_0_10px_#00bfff,0_0_20px_#00bfff] hover:border-[#00ffff]"
+        >
+          MENU
+        </Link>
+      </div>
     </Layout>
   );
 };
