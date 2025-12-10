@@ -3,8 +3,24 @@ import Earth from "../../assets/Earth.png";
 import UserIcon from "../../assets/User.png";
 import { Link } from "react-router-dom";
 import { supabase } from "../../supabaseClient";
+import { soundManager } from "../../utils/soundManager";
+
+
 
 const LeaderBoard = () => {
+  //play sound
+  useEffect(() => {
+    const unlockAudio = async () => {
+      await soundManager.unlock();
+      soundManager.startBackground();
+      window.removeEventListener("click", unlockAudio);
+    };
+
+    window.addEventListener("click", unlockAudio);
+
+    return () => window.removeEventListener("click", unlockAudio);
+  }, []);
+  
   //________________________________________________________________________
   //state for players
   const [players, setPlayers] = useState([]);
@@ -136,6 +152,7 @@ const LeaderBoard = () => {
       <div className="flex flex-col md:flex-row gap-5 mt-10 w-full">
 
         <Link
+        onClick={() => soundManager.play("click")}
           to="/game"
           className="flex-1 py-3 text-xl tracking-widest border border-[#00eaff] rounded-xl text-center hover:bg-[#00eaff] hover:text-black transition-all shadow-[0_0_15px_#00eaff]"
         >
@@ -143,6 +160,7 @@ const LeaderBoard = () => {
         </Link>
 
         <Link
+        onClick={() => soundManager.play("click")}
           to="/MainMenu"
           className="flex-1 py-3 text-xl tracking-widest border border-[#00eaff] rounded-xl text-center hover:bg-[#00eaff] hover:text-black transition-all shadow-[0_0_15px_#00eaff]"
         >

@@ -2,8 +2,24 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Layout from "../../components/Layout/Layout";
 import { supabase } from "../../supabaseClient";
+import { soundManager } from "../../utils/soundManager";
+
 
 const Signin = () => {
+
+    //play sound
+    useEffect(() => {
+      const unlockAudio = async () => {
+        await soundManager.unlock();
+        soundManager.startBackground();
+        window.removeEventListener("click", unlockAudio);
+      };
+  
+      window.addEventListener("click", unlockAudio);
+  
+      return () => window.removeEventListener("click", unlockAudio);
+    }, []);
+    
   const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -110,6 +126,7 @@ return (
       {/* MENU BUTTON */}
       <div className="flex flex-col w-full mt-8">
         <Link
+        onClick={() => soundManager.play("click")}
           to="/MainMenu"
           className="w-full py-3 text-xl tracking-widest border border-[#00bfff] rounded-md text-center text-white transition-all duration-300 hover:shadow-[0_0_15px_#00bfff,0_0_25px_#00bfff] hover:border-[#00ffff]"
         >

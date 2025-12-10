@@ -1,7 +1,23 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
+import { soundManager } from "../../utils/soundManager";
+
+
 
 const MainMenu = () => {
+  //play sound
+  useEffect(() => {
+    const unlockAudio = async () => {
+      await soundManager.unlock();
+      soundManager.startBackground();
+      window.removeEventListener("click", unlockAudio);
+    };
+
+    window.addEventListener("click", unlockAudio);
+
+    return () => window.removeEventListener("click", unlockAudio);
+  }, []);
+  
   return (
     <div className="fixed inset-0 w-screen h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white font-sans overflow-hidden">
 
@@ -93,6 +109,7 @@ const MainMenu = () => {
               
               {/* Start Mission Button */}
               <Link
+              onClick={() => soundManager.play("click")}
                 to="/login"
                 className="group relative w-full py-5 px-8 text-xl font-semibold tracking-wide overflow-hidden rounded-xl transition-all duration-300"
               >
@@ -108,6 +125,7 @@ const MainMenu = () => {
 
               {/* Leaderboard Button */}
               <Link
+              onClick={() => soundManager.play("click")}
                 to="/leaderboard"
                 className="group relative w-full py-5 px-8 text-xl font-semibold tracking-wide border-2 border-blue-500/40 rounded-xl bg-blue-500/5 hover:bg-blue-500/10 hover:border-blue-400/60 backdrop-blur-sm transition-all duration-300"
               >

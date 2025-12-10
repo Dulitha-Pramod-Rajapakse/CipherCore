@@ -1,8 +1,24 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CURRENT_GAME_WORD } from "../Pages/GameUI";
+import { soundManager } from "../../utils/soundManager";
+
+
 
 const HintPage = () => {
+  //play sound
+  useEffect(() => {
+    const unlockAudio = async () => {
+      await soundManager.unlock();
+      soundManager.startBackground();
+      window.removeEventListener("click", unlockAudio);
+    };
+
+    window.addEventListener("click", unlockAudio);
+
+    return () => window.removeEventListener("click", unlockAudio);
+  }, []);
+  
   const [question, setQuestion] = useState("");
   const [solution, setSolution] = useState(null);
   const [answer, setAnswer] = useState("");
@@ -79,6 +95,7 @@ const HintPage = () => {
           />
 
           <button
+          onClick={() => soundManager.play("click")}
             type="submit"
             className="w-40 py-2 rounded-md border border-cyan-400 text-cyan-300 hover:bg-cyan-400 hover:text-black transition-all duration-300 tracking-widest shadow-[0_0_15px_rgba(0,200,255,0.25)]"
           >

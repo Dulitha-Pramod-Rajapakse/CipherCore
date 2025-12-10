@@ -1,9 +1,25 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Layout from "../../components/Layout/Layout";
 import { supabase } from "../../supabaseClient";
+import { soundManager } from "../../utils/soundManager";
+
+
 
 const Login = () => {
+  //play sound
+  useEffect(() => {
+    const unlockAudio = async () => {
+      await soundManager.unlock();
+      soundManager.startBackground();
+      window.removeEventListener("click", unlockAudio);
+    };
+
+    window.addEventListener("click", unlockAudio);
+
+    return () => window.removeEventListener("click", unlockAudio);
+  }, []);
+
   const navigate = useNavigate();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");

@@ -5,6 +5,7 @@ import Earth from "../../assets/Earth.png";
 import User from "../../assets/User.png";
 import Bulb from "../../assets/Bulb.png";
 import { Link } from "react-router-dom";
+import { soundManager } from "../../utils/soundManager";
 
 const rows = 6;
 const cols = 5;
@@ -67,6 +68,24 @@ const GameUI = () => {
     };
     loadUserData();
   }, []);
+
+
+  //play sound
+  useEffect(() => {
+    const unlockAudio = async () => {
+      await soundManager.unlock();
+      soundManager.startBackground();
+      window.removeEventListener("click", unlockAudio);
+    };
+
+    window.addEventListener("click", unlockAudio);
+
+    return () => window.removeEventListener("click", unlockAudio);
+  }, []);
+
+
+
+
 
   // Fetch word from Supabase
   useEffect(() => {
@@ -161,6 +180,7 @@ const GameUI = () => {
     if (activeRow >= rows) return;
 
     if (/^[A-Z]$/.test(key)) {
+      soundManager.play("click");
       setGrid((prev) => {
         const newGrid = [...prev];
         newGrid[activeRow][activeCol] = key;
@@ -168,6 +188,7 @@ const GameUI = () => {
       });
       if (activeCol < cols - 1) setActiveCol(activeCol + 1);
     } else if (key === "BACKSPACE") {
+      soundManager.play("click");
       if (activeCol > 0 || grid[activeRow][activeCol] !== "") {
         setGrid((prev) => {
           const newGrid = [...prev];
@@ -191,229 +212,245 @@ const GameUI = () => {
   };
 
   // Check row
-  const checkWord = () => {
-    if (!solution) return;
-    const rowWord = grid[activeRow].join("");
-    const newColors = [...colors];
+const checkWord = () => {
+  if (!solution) return;
+  const rowWord = grid[activeRow].join("");
+  const newColors = [...colors];
 
-    rowWord.split("").forEach((letter, i) => {
-      if (letter === solution[i]) {
-        newColors[activeRow][i] = "bg-green-500/70 text-white font-bold";
-      } else if (solution.includes(letter)) {
-        newColors[activeRow][i] = "bg-yellow-400/70 text-white font-bold";
-      } else {
-        newColors[activeRow][i] = "bg-red-600/50 text-white font-bold";
-      }
-    });
-
-    setColors(newColors);
-
-    if (rowWord === solution) {
-      handleGameOver("🎉 You Successfully Countered The Hacker!");
-    } else if (activeRow < rows - 1) {
-      setActiveRow(activeRow + 1);
-      setActiveCol(0);
-      setLives((prev) => prev - 1);
-      if (lives - 1 === 0) {
-        handleGameOver("❌ Game Over! You got hacked!");
-      }
+  rowWord.split("").forEach((letter, i) => {
+    if (letter === solution[i]) {
+      newColors[activeRow][i] = "bg-green-500/70 text-white font-bold";
+    } else if (solution.includes(letter)) {
+      newColors[activeRow][i] = "bg-yellow-400/70 text-white font-bold";
     } else {
-      handleGameOver("❌ Game Over! You got hacked!");
+      newColors[activeRow][i] = "bg-red-600/50 text-white font-bold";
     }
-  };
-
-  // Score update
-const handleGameOver = async (msg) => {
-  clearInterval(timerRef.current);
-  setMessage(msg);
-  setIsGameOver(true);
-
-  const playerWon = msg.trim().startsWith("🎉");
-
-  if (!playerWon) return;
-
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return;
-
-  const { data,error } = await supabase.rpc("increase_score", {
-    user_id: user.id,
-    points: 100
   });
 
-  console.log("RPC data:", data);
-  console.log("RPC error:", error);
+  setColors(newColors);
 
-  if (error) {
-    console.error("Score update failed:", error);
-  } else {
-    console.log("Score updated successfully");
+  // --- WIN ---
+  if (rowWord === solution) {
+    soundManager.play("correct");     // 🔊 PLAY WIN SOUND
+    handleGameOver("🎉 You Successfully Countered The Hacker!");
+    return;
   }
+
+  // --- WRONG (but has attempts left) ---
+  if (activeRow < rows - 1) {
+    soundManager.play("error");       // 🔊 WRONG ROW SOUND
+    setActiveRow(activeRow + 1);
+    setActiveCol(0);
+    setLives((prev) => prev - 1);
+
+    if (lives - 1 === 0) {
+      handleGameOver("❌ Game Over! You got hacked!");
+    }
+    return;
+  }
+
+  // --- WRONG + no attempts left ---
+  soundManager.play("error");         // 🔊 FINAL FAILURE SOUND
+  handleGameOver("❌ Game Over! You got hacked!");
 };
+
+
+  // Score update
+  const handleGameOver = async (msg) => {
+    clearInterval(timerRef.current);
+    setMessage(msg);
+    setIsGameOver(true);
+
+    const playerWon = msg.trim().startsWith("🎉");
+
+    if (!playerWon) return;
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data, error } = await supabase.rpc("increase_score", {
+      user_id: user.id,
+      points: 100
+    });
+
+    console.log("RPC data:", data);
+    console.log("RPC error:", error);
+
+    if (error) {
+      console.error("Score update failed:", error);
+    } else {
+      console.log("Score updated successfully");
+    }
+  };
 
 
 
   const handleHint = () => {
+    soundManager.play("click");
     if (!isGameOver) navigate("/hint");
   };
 
   const handleNewGame = () => {
-  const gameKeys = [
-    "ciphercore_grid",
-    "ciphercore_colors",
-    "ciphercore_activeRow",
-    "ciphercore_activeCol",
-    "ciphercore_lives",
-    "ciphercore_countdown",
-    "ciphercore_totalTime",
-    "ciphercore_hint_solved",
-    "ciphercore_autofill_letter"
-  ];
+    soundManager.play("click");
 
-  gameKeys.forEach((key) => localStorage.removeItem(key));
+    const gameKeys = [
+      "ciphercore_grid",
+      "ciphercore_colors",
+      "ciphercore_activeRow",
+      "ciphercore_activeCol",
+      "ciphercore_lives",
+      "ciphercore_countdown",
+      "ciphercore_totalTime",
+      "ciphercore_hint_solved",
+      "ciphercore_autofill_letter"
+    ];
 
-  window.location.reload();
-};
+    gameKeys.forEach((key) => localStorage.removeItem(key));
 
-
-return (
- <div
-  tabIndex={0}
-  onKeyDown={handleKeyDown}
-  className="relative min-h-screen w-full flex flex-col items-center justify-start bg-[#000814] text-white overflow-hidden outline-none"
->
+    window.location.reload();
+  };
 
 
-    {/* Animated Grid Background */}
-    <div className="absolute inset-0 opacity-[0.13] pointer-events-none">
-      <div
-        className="absolute inset-0"
-        style={{
-          backgroundImage: `
+  return (
+    <div
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+      className="relative min-h-screen w-full flex flex-col items-center justify-start bg-[#000814] text-white overflow-hidden outline-none"
+    >
+
+
+      {/* Animated Grid Background */}
+      <div className="absolute inset-0 opacity-[0.13] pointer-events-none">
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `
             linear-gradient(rgba(0,150,255,0.25) 1px, transparent 1px),
             linear-gradient(90deg, rgba(0,150,255,0.25) 1px, transparent 1px)
           `,
-          backgroundSize: "70px 70px",
-          animation: "gridMove 35s linear infinite",
-        }}
-      />
-    </div>
-
-    {/* Floating neon particles */}
-    <div className="absolute inset-0 pointer-events-none">
-      {[...Array(20)].map((_, i) => (
-        <div
-          key={i}
-          className="absolute w-1 h-1 bg-cyan-400/40 rounded-full"
-          style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            animation: `float ${10 + Math.random() * 18}s ease-in-out infinite`,
-            animationDelay: `${Math.random() * 5}s`,
+            backgroundSize: "70px 70px",
+            animation: "gridMove 35s linear infinite",
           }}
         />
-      ))}
-    </div>
-
-    {/* Glow Orbs */}
-    <div className="absolute -top-40 -left-20 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl" />
-    <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl" />
-
-    {/* Large Earth Glow */}
-    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-20 pointer-events-none">
-      <img
-        src={Earth}
-        alt="Earth"
-        className="w-[480px] h-[480px] object-contain drop-shadow-[0_0_40px_rgba(0,255,255,0.4)]"
-      />
-    </div>
-
-    {/* TOP BAR — Player + Timer */}
-    <div className="absolute top-6 left-6 z-20 flex items-center space-x-3">
-      <div className="w-12 h-12 rounded-full border border-white/40 bg-black/20 backdrop-blur-sm flex items-center justify-center overflow-hidden">
-        <img src={User} alt="User" className="w-9 h-9 object-contain" />
       </div>
-      <div className="leading-tight">
-        <p className="font-semibold tracking-wider">{playerName}</p>
-        <p className="text-xs text-gray-400">{playerTag}</p>
+
+      {/* Floating neon particles */}
+      <div className="absolute inset-0 pointer-events-none">
+        {[...Array(20)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-1 h-1 bg-cyan-400/40 rounded-full"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animation: `float ${10 + Math.random() * 18}s ease-in-out infinite`,
+              animationDelay: `${Math.random() * 5}s`,
+            }}
+          />
+        ))}
       </div>
-    </div>
 
-    <div className="absolute top-6 right-6 z-20 flex items-center space-x-6">
-      <div className="text-right">
-        <p className="text-cyan-300 text-lg tracking-wide">⏳ {countdown}s</p>
-        <p className="text-red-400 text-sm tracking-wide">❤️ {lives} Lives</p>
+      {/* Glow Orbs */}
+      <div className="absolute -top-40 -left-20 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl" />
+      <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl" />
+
+      {/* Large Earth Glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-20 pointer-events-none">
+        <img
+          src={Earth}
+          alt="Earth"
+          className="w-[480px] h-[480px] object-contain drop-shadow-[0_0_40px_rgba(0,255,255,0.4)]"
+        />
       </div>
-      <img
-        src={Bulb}
-        alt="Hint"
-        onClick={handleHint}
-        className="w-9 h-9 cursor-pointer hover:brightness-125 transition"
-      />
-    </div>
 
-    {/* MAIN GAME CONTAINER */}
-    <main className="relative z-10 w-full max-w-xl px-8 py-12 bg-white/5 border border-white/10 backdrop-blur-md rounded-2xl shadow-[0_0_40px_rgba(0,200,255,0.25)]">
-      <h1
-        className="text-4xl mb-8 tracking-widest text-center font-bold"
-        style={{
-          textShadow:
-            "0 0 10px rgba(255,255,255,0.8), 0 0 20px rgba(0,204,255,0.4)",
-        }}
-      >
-        CipherCore
-      </h1>
-
-      {!solution ? (
-        <p className="text-cyan-300 text-center text-sm">Loading word...</p>
-      ) : (
-        <div className="w-full bg-white/10 p-6 rounded-xl border border-white/20 backdrop-blur-sm">
-          {grid.map((row, rowIndex) => (
-            <div key={rowIndex} className="flex justify-center gap-3 mb-3">
-              {row.map((cell, colIndex) => (
-                <input
-                  key={colIndex}
-                  ref={(el) => {
-                    if (!inputsRef.current[rowIndex])
-                      inputsRef.current[rowIndex] = [];
-                    inputsRef.current[rowIndex][colIndex] = el;
-                  }}
-                  type="text"
-                  maxLength={1}
-                  value={cell}
-                  readOnly
-                  className={`w-14 h-14 text-center rounded-lg border border-white/30 text-2xl uppercase tracking-widest font-bold ${colors[rowIndex][colIndex]} backdrop-blur-sm focus:outline-none`}
-                />
-              ))}
-            </div>
-          ))}
+      {/* TOP BAR — Player + Timer */}
+      <div className="absolute top-6 left-6 z-20 flex items-center space-x-3">
+        <div className="w-12 h-12 rounded-full border border-white/40 bg-black/20 backdrop-blur-sm flex items-center justify-center overflow-hidden">
+          <img src={User} alt="User" className="w-9 h-9 object-contain" />
         </div>
-      )}
+        <div className="leading-tight">
+          <p className="font-semibold tracking-wider">{playerName}</p>
+          <p className="text-xs text-gray-400">{playerTag}</p>
+        </div>
+      </div>
 
-      {/* New Game */}
-      <button
-        onClick={handleNewGame}
-        className="mt-8 w-full py-3 text-lg tracking-widest rounded-md border border-cyan-400/40 text-white bg-black/20 backdrop-blur-sm hover:border-cyan-300 hover:shadow-[0_0_15px_#00bfff] transition-all"
-      >
-        NEW GAME
-      </button>
+      <div className="absolute top-6 right-6 z-20 flex items-center space-x-6">
+        <div className="text-right">
+          <p className="text-cyan-300 text-lg tracking-wide">⏳ {countdown}s</p>
+          <p className="text-red-400 text-sm tracking-wide">❤️ {lives} Lives</p>
+        </div>
+        <img
+          src={Bulb}
+          alt="Hint"
+          onClick={handleHint}
+          className="w-9 h-9 cursor-pointer hover:brightness-125 transition"
+        />
+      </div>
 
-      {/* Main Menu */}
-      <Link
-        to="/MainMenu"
-        className="mt-6 w-full block py-3 text-lg tracking-widest rounded-md border border-cyan-400/40 text-white text-center bg-black/20 backdrop-blur-sm hover:border-cyan-300 hover:shadow-[0_0_15px_#00bfff] transition-all"
-      >
-        MAIN MENU
-      </Link>
+      {/* MAIN GAME CONTAINER */}
+      <main className="relative z-10 w-full max-w-xl px-8 py-12 bg-white/5 border border-white/10 backdrop-blur-md rounded-2xl shadow-[0_0_40px_rgba(0,200,255,0.25)]">
+        <h1
+          className="text-4xl mb-8 tracking-widest text-center font-bold"
+          style={{
+            textShadow:
+              "0 0 10px rgba(255,255,255,0.8), 0 0 20px rgba(0,204,255,0.4)",
+          }}
+        >
+          CipherCore
+        </h1>
 
-      {message && (
-        <p className="mt-6 text-cyan-300 text-center text-sm">{message}</p>
-      )}
+        {!solution ? (
+          <p className="text-cyan-300 text-center text-sm">Loading word...</p>
+        ) : (
+          <div className="w-full bg-white/10 p-6 rounded-xl border border-white/20 backdrop-blur-sm">
+            {grid.map((row, rowIndex) => (
+              <div key={rowIndex} className="flex justify-center gap-3 mb-3">
+                {row.map((cell, colIndex) => (
+                  <input
+                    key={colIndex}
+                    ref={(el) => {
+                      if (!inputsRef.current[rowIndex])
+                        inputsRef.current[rowIndex] = [];
+                      inputsRef.current[rowIndex][colIndex] = el;
+                    }}
+                    type="text"
+                    maxLength={1}
+                    value={cell}
+                    readOnly
+                    className={`w-14 h-14 text-center rounded-lg border border-white/30 text-2xl uppercase tracking-widest font-bold ${colors[rowIndex][colIndex]} backdrop-blur-sm focus:outline-none`}
+                  />
+                ))}
+              </div>
+            ))}
+          </div>
+        )}
 
-      <p className="mt-10 text-xs text-center text-gray-500">© 2025 CipherCore</p>
-    </main>
+        {/* New Game */}
+        <button
+          onClick={handleNewGame}
+          className="mt-8 w-full py-3 text-lg tracking-widest rounded-md border border-cyan-400/40 text-white bg-black/20 backdrop-blur-sm hover:border-cyan-300 hover:shadow-[0_0_15px_#00bfff] transition-all"
+        >
+          NEW GAME
+        </button>
 
-    {/* Animations */}
-    <style jsx>{`
+        {/* Main Menu */}
+        <Link
+          to="/MainMenu"
+          onClick={() => soundManager.play("click")}
+          className="mt-6 w-full block py-3 text-lg tracking-widest rounded-md border border-cyan-400/40 text-white text-center bg-black/20 backdrop-blur-sm hover:border-cyan-300 hover:shadow-[0_0_15px_#00bfff] transition-all"
+        >
+          MAIN MENU
+        </Link>
+
+        {message && (
+          <p className="mt-6 text-cyan-300 text-center text-sm">{message}</p>
+        )}
+
+        <p className="mt-10 text-xs text-center text-gray-500">© 2025 CipherCore</p>
+      </main>
+
+      {/* Animations */}
+      <style jsx>{`
       @keyframes gridMove {
         0% {
           transform: translate(0, 0);
@@ -434,8 +471,8 @@ return (
         }
       }
     `}</style>
-  </div>
-);
+    </div>
+  );
 
 };
 
