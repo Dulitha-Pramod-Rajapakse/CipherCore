@@ -73,94 +73,89 @@ const LeaderBoard = () => {
     fetchCurrentUser();
   }, []);
 
-  return (
-    <div className="relative min-h-screen flex flex-col items-center justify-center w-full bg-[#000814] text-white font-[Jacques_Francois_Shadow] overflow-hidden">
+ return (
+  <div className="relative min-h-screen w-full flex flex-col items-center justify-start bg-[#000814] text-white font-[Jacques_Francois_Shadow] overflow-hidden">
 
-      {/* Background Gradients */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#000814] via-[#001e40] to-[#000814] opacity-90" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,102,255,0.28)_0%,rgba(0,0,0,0.92)_68%)] pointer-events-none" />
+    {/* Background Layers */}
+    <div className="absolute inset-0 bg-gradient-to-b from-[#001122] via-[#000a18] to-black opacity-90" />
+    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,180,255,0.25)_0%,rgba(0,0,0,0.95)_70%)] pointer-events-none" />
 
-      {/* Earth Glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-20 pointer-events-none">
-        <img
-          src={Earth}
-          alt="Earth"
-          className="w-[440px] h-[440px] object-contain drop-shadow-[0_0_30px_rgba(0,255,255,0.35)]"
-        />
+    {/* HEADER TITLE */}
+    <header className="w-full text-center mt-10 z-20">
+      <h1 className="text-5xl tracking-[0.3em] drop-shadow-[0_0_15px_#00eaff]">
+        LEADERBOARD
+      </h1>
+    </header>
+
+    {/* CURRENT USER BOX */}
+    <div className="w-full max-w-[90%] bg-white/5 border border-white/10 rounded-xl mt-10 p-4 flex items-center gap-4 backdrop-blur-lg z-20 shadow-[0_0_20px_rgba(0,200,255,0.2)]">
+      <div className="w-12 h-12 border border-cyan-400 rounded-full flex justify-center items-center overflow-hidden">
+        <img src={UserIcon} className="w-10 h-10" />
       </div>
 
-      {/* Logged User Display */}
-      <div className="absolute top-6 left-6 flex items-center space-x-3 z-20">
-        <div className="w-10 h-10 rounded-full border border-white flex items-center justify-center overflow-hidden">
-          <img src={UserIcon} alt="User" className="w-8 h-8 object-contain" />
-        </div>
-        <div className="text-sm leading-tight">
-          <p className="tracking-wider">{currentUser.username}</p>
-          <p className="text-xs text-gray-400">#{currentUser.id}</p>
-        </div>
+      <div>
+        <p className="text-xl tracking-widest">{currentUser.username}</p>
+        <p className="text-sm text-gray-400">#{currentUser.id}</p>
       </div>
-
-      {/* Main Content */}
-      <main className="relative z-10 w-full max-w-[480px] flex flex-col items-center px-6 py-10 text-center">
-        <h1
-          className="text-4xl mb-8 tracking-widest"
-          style={{
-            textShadow:
-              "0 0 10px rgba(255,255,255,0.8), 0 0 20px rgba(0,204,255,0.4)",
-          }}
-        >
-          Leaderboard
-        </h1>
-
-        {/* Table */}
-        <div className="w-full bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur-sm shadow-lg">
-          <div className="flex justify-between text-cyan-300 text-sm mb-3 border-b border-cyan-500/30 pb-2">
-            <p className="w-1/6 text-center">Rank</p>
-            <p className="w-2/3 text-center">Player</p>
-            <p className="w-1/6 text-center">Score</p>
-          </div>
-
-          {loading ? (
-            <p className="text-center text-gray-400 py-4">Loading...</p>
-          ) : (
-            players.map((player, index) => (
-              <div
-                key={index}
-                className={`flex justify-between items-center mb-2 py-2 rounded-md transition-all duration-300 ${
-                  index === 0
-                    ? "bg-cyan-500/20 border border-cyan-400/40 shadow-[0_0_10px_#00bfff]"
-                    : "hover:bg-white/10"
-                }`}
-              >
-                <p className="w-1/6 text-center">{index + 1}</p>
-                <p className="w-2/3 text-center tracking-wider">{player.username}</p>
-                <p className="w-1/6 text-center">{player.score}</p>
-              </div>
-            ))
-          )}
-        </div>
-
-        {/* Buttons */}
-        <div className="flex flex-col md:flex-row gap-4 mt-8 w-full justify-center">
-          <Link
-            to="/game"
-            className="flex-1 py-2 text-lg tracking-widest border border-[#00bfff] rounded-md text-white text-center transition-all duration-300 hover:shadow-[0_0_10px_#00bfff,0_0_20px_#00bfff] hover:border-[#00ffff]"
-          >
-            PLAY AGAIN
-          </Link>
-
-          <Link
-            to="/MainMenu"
-            className="flex-1 py-2 text-lg tracking-widest border border-[#00bfff] rounded-md text-white text-center transition-all duration-300 hover:shadow-[0_0_10px_#00bfff,0_0_20px_#00bfff] hover:border-[#00ffff]"
-          >
-            MENU
-          </Link>
-        </div>
-
-        <p className="mt-10 text-xs text-gray-400">© 2025 CipherCore</p>
-      </main>
     </div>
-  );
+
+    {/* TABLE CONTAINER */}
+    <main className="relative w-full max-w-[90%] mt-8 z-20">
+
+      <div className="w-full bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-xl shadow-[0_0_25px_rgba(0,255,255,0.15)]">
+
+        {/* TABLE HEADER */}
+        <div className="flex justify-between px-2 text-cyan-300 text-lg font-semibold border-b border-cyan-500/30 pb-3">
+          <p className="w-1/6 text-center">Rank</p>
+          <p className="w-3/6 text-center">Player</p>
+          <p className="w-1/6 text-center">Score</p>
+        </div>
+
+        {/* TABLE ROWS */}
+        {loading ? (
+          <p className="text-center text-gray-400 py-6">Loading…</p>
+        ) : (
+          players.map((player, index) => (
+            <div
+              key={index}
+              className={`flex justify-between text-lg items-center my-2 py-3 rounded-lg transition-all ${
+                index === 0
+                  ? "bg-cyan-500/20 border border-cyan-300/40 shadow-[0_0_15px_#00eaff]"
+                  : "hover:bg-white/10"
+              }`}
+            >
+              <p className="w-1/6 text-center">{index + 1}</p>
+              <p className="w-3/6 text-center tracking-wider">{player.username}</p>
+              <p className="w-1/6 text-center">{player.score}</p>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* BUTTONS */}
+      <div className="flex flex-col md:flex-row gap-5 mt-10 w-full">
+
+        <Link
+          to="/game"
+          className="flex-1 py-3 text-xl tracking-widest border border-[#00eaff] rounded-xl text-center hover:bg-[#00eaff] hover:text-black transition-all shadow-[0_0_15px_#00eaff]"
+        >
+          PLAY AGAIN
+        </Link>
+
+        <Link
+          to="/MainMenu"
+          className="flex-1 py-3 text-xl tracking-widest border border-[#00eaff] rounded-xl text-center hover:bg-[#00eaff] hover:text-black transition-all shadow-[0_0_15px_#00eaff]"
+        >
+          MENU
+        </Link>
+
+      </div>
+
+      <p className="text-center mt-10 text-xs text-gray-400">© 2025 CipherCore</p>
+    </main>
+  </div>
+);
+
 };
 
 export default LeaderBoard;

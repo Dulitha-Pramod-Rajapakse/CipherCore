@@ -275,111 +275,168 @@ const handleGameOver = async (msg) => {
 };
 
 
-  return (
-    <div
-      tabIndex={0}
-      onKeyDown={handleKeyDown}
-      className="relative min-h-screen flex flex-col items-center justify-center w-full bg-[#000814] text-white font-[Jacques_Francois_Shadow] overflow-hidden outline-none"
-    >
-      {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#000814] via-[#001e40] to-[#000814] opacity-90" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,102,255,0.28)_0%,rgba(0,0,0,0.92)_68%)] pointer-events-none" />
+return (
+ <div
+  tabIndex={0}
+  onKeyDown={handleKeyDown}
+  className="relative min-h-screen w-full flex flex-col items-center justify-start bg-[#000814] text-white overflow-hidden outline-none"
+>
 
-      {/* Earth */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-20 pointer-events-none">
-        <img
-          src={Earth}
-          alt="Earth"
-          className="w-[420px] h-[420px] object-contain drop-shadow-[0_0_30px_rgba(0,255,255,0.35)]"
-        />
-      </div>
 
-      {/* Top Left User */}
-      <div className="absolute top-6 left-6 flex items-center space-x-3 z-20">
-        <div className="w-10 h-10 rounded-full border border-white flex items-center justify-center overflow-hidden">
-          <img src={User} alt="User" className="w-8 h-8 object-contain" />
-        </div>
-        <div className="text-sm leading-tight">
-          <p className="tracking-wider">{playerName}</p>
-          <p className="text-xs text-gray-400">{playerTag}</p>
-        </div>
-      </div>
-
-      {/* Timer + Lives + Hint */}
-      <div className="absolute top-6 right-6 flex items-center space-x-6 z-20">
-        <div className="flex flex-col items-end text-right">
-          <span className="text-lg text-cyan-400">⏳ {countdown}s</span>
-          <span className="text-sm text-red-400">❤️ {lives} Lives</span>
-        </div>
-        <img
-          src={Bulb}
-          alt="Hint"
-          onClick={handleHint}
-          className="w-8 h-8 cursor-pointer hover:brightness-125 transition duration-200"
-          title="Get a Hint"
-        />
-      </div>
-
-      {/* Game */}
-      <main className="relative z-10 w-full max-w-[420px] flex flex-col items-center px-6 py-10 text-center">
-        <h1
-          className="text-4xl mb-6 tracking-widest"
-          style={{
-            textShadow:
-              "0 0 10px rgba(255,255,255,0.8), 0 0 20px rgba(0,204,255,0.4)",
-          }}
-        >
-          CipherCore
-        </h1>
-
-        {!solution ? (
-          <p className="text-cyan-300 text-sm">Loading word...</p>
-        ) : (
-          <div className="bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur-sm shadow-lg w-full">
-            {grid.map((row, rowIndex) => (
-              <div key={rowIndex} className="flex justify-center gap-3 mb-2">
-                {row.map((cell, colIndex) => (
-                  <input
-                    key={colIndex}
-                    ref={(el) => {
-                      if (!inputsRef.current[rowIndex])
-                        inputsRef.current[rowIndex] = [];
-                      inputsRef.current[rowIndex][colIndex] = el;
-                    }}
-                    type="text"
-                    maxLength={1}
-                    value={cell}
-                    readOnly
-                    className={`w-14 h-14 text-center rounded-md border border-white/20 ${colors[rowIndex][colIndex]} text-2xl font-bold uppercase focus:outline-none`}
-                  />
-                ))}
-              </div>
-            ))}
-          </div>
-        )}
-
-        <button
-          onClick={handleNewGame}
-          className="mt-8 w-full py-2 text-lg tracking-widest border border-[#00bfff] rounded-md text-white transition-all duration-300 hover:shadow-[0_0_10px_#00bfff,0_0_20px_#00bfff] hover:border-[#00ffff]"
-        >
-          NEW GAME
-        </button>
-
-        <Link
-          to="/MainMenu"
-          className="mt-8 w-full py-2 text-lg tracking-widest border border-[#00bfff] rounded-md text-white transition-all duration-300 hover:shadow-[0_0_10px_#00bfff,0_0_20px_#00bfff] hover:border-[#00ffff]"
-        >
-          Main Menu
-        </Link>
-
-        {message && (
-          <p className="mt-4 text-cyan-300 text-sm text-center">{message}</p>
-        )}
-
-        <p className="mt-10 text-xs text-gray-400">© 2025 CipherCore</p>
-      </main>
+    {/* Animated Grid Background */}
+    <div className="absolute inset-0 opacity-[0.13] pointer-events-none">
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: `
+            linear-gradient(rgba(0,150,255,0.25) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0,150,255,0.25) 1px, transparent 1px)
+          `,
+          backgroundSize: "70px 70px",
+          animation: "gridMove 35s linear infinite",
+        }}
+      />
     </div>
-  );
+
+    {/* Floating neon particles */}
+    <div className="absolute inset-0 pointer-events-none">
+      {[...Array(20)].map((_, i) => (
+        <div
+          key={i}
+          className="absolute w-1 h-1 bg-cyan-400/40 rounded-full"
+          style={{
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+            animation: `float ${10 + Math.random() * 18}s ease-in-out infinite`,
+            animationDelay: `${Math.random() * 5}s`,
+          }}
+        />
+      ))}
+    </div>
+
+    {/* Glow Orbs */}
+    <div className="absolute -top-40 -left-20 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl" />
+    <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl" />
+
+    {/* Large Earth Glow */}
+    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-20 pointer-events-none">
+      <img
+        src={Earth}
+        alt="Earth"
+        className="w-[480px] h-[480px] object-contain drop-shadow-[0_0_40px_rgba(0,255,255,0.4)]"
+      />
+    </div>
+
+    {/* TOP BAR — Player + Timer */}
+    <div className="absolute top-6 left-6 z-20 flex items-center space-x-3">
+      <div className="w-12 h-12 rounded-full border border-white/40 bg-black/20 backdrop-blur-sm flex items-center justify-center overflow-hidden">
+        <img src={User} alt="User" className="w-9 h-9 object-contain" />
+      </div>
+      <div className="leading-tight">
+        <p className="font-semibold tracking-wider">{playerName}</p>
+        <p className="text-xs text-gray-400">{playerTag}</p>
+      </div>
+    </div>
+
+    <div className="absolute top-6 right-6 z-20 flex items-center space-x-6">
+      <div className="text-right">
+        <p className="text-cyan-300 text-lg tracking-wide">⏳ {countdown}s</p>
+        <p className="text-red-400 text-sm tracking-wide">❤️ {lives} Lives</p>
+      </div>
+      <img
+        src={Bulb}
+        alt="Hint"
+        onClick={handleHint}
+        className="w-9 h-9 cursor-pointer hover:brightness-125 transition"
+      />
+    </div>
+
+    {/* MAIN GAME CONTAINER */}
+    <main className="relative z-10 w-full max-w-xl px-8 py-12 bg-white/5 border border-white/10 backdrop-blur-md rounded-2xl shadow-[0_0_40px_rgba(0,200,255,0.25)]">
+      <h1
+        className="text-4xl mb-8 tracking-widest text-center font-bold"
+        style={{
+          textShadow:
+            "0 0 10px rgba(255,255,255,0.8), 0 0 20px rgba(0,204,255,0.4)",
+        }}
+      >
+        CipherCore
+      </h1>
+
+      {!solution ? (
+        <p className="text-cyan-300 text-center text-sm">Loading word...</p>
+      ) : (
+        <div className="w-full bg-white/10 p-6 rounded-xl border border-white/20 backdrop-blur-sm">
+          {grid.map((row, rowIndex) => (
+            <div key={rowIndex} className="flex justify-center gap-3 mb-3">
+              {row.map((cell, colIndex) => (
+                <input
+                  key={colIndex}
+                  ref={(el) => {
+                    if (!inputsRef.current[rowIndex])
+                      inputsRef.current[rowIndex] = [];
+                    inputsRef.current[rowIndex][colIndex] = el;
+                  }}
+                  type="text"
+                  maxLength={1}
+                  value={cell}
+                  readOnly
+                  className={`w-14 h-14 text-center rounded-lg border border-white/30 text-2xl uppercase tracking-widest font-bold ${colors[rowIndex][colIndex]} backdrop-blur-sm focus:outline-none`}
+                />
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* New Game */}
+      <button
+        onClick={handleNewGame}
+        className="mt-8 w-full py-3 text-lg tracking-widest rounded-md border border-cyan-400/40 text-white bg-black/20 backdrop-blur-sm hover:border-cyan-300 hover:shadow-[0_0_15px_#00bfff] transition-all"
+      >
+        NEW GAME
+      </button>
+
+      {/* Main Menu */}
+      <Link
+        to="/MainMenu"
+        className="mt-6 w-full block py-3 text-lg tracking-widest rounded-md border border-cyan-400/40 text-white text-center bg-black/20 backdrop-blur-sm hover:border-cyan-300 hover:shadow-[0_0_15px_#00bfff] transition-all"
+      >
+        MAIN MENU
+      </Link>
+
+      {message && (
+        <p className="mt-6 text-cyan-300 text-center text-sm">{message}</p>
+      )}
+
+      <p className="mt-10 text-xs text-center text-gray-500">© 2025 CipherCore</p>
+    </main>
+
+    {/* Animations */}
+    <style jsx>{`
+      @keyframes gridMove {
+        0% {
+          transform: translate(0, 0);
+        }
+        100% {
+          transform: translate(70px, 70px);
+        }
+      }
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0) translateX(0) scale(1);
+          opacity: 0.25;
+        }
+        50% {
+          transform: translateY(-25px) translateX(15px) scale(1.3);
+          opacity: 0.6;
+        }
+      }
+    `}</style>
+  </div>
+);
+
 };
 
 export default GameUI;

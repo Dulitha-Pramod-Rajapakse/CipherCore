@@ -38,45 +38,67 @@ const HintPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#000814] text-white font-[Jacques_Francois_Shadow] px-6 text-center">
-      <h1 className="text-4xl mb-6 tracking-widest text-cyan-400 drop-shadow-[0_0_10px_#00ffff]">
-        CipherCore Hint
-      </h1>
+    <div className="min-h-screen w-full flex flex-col items-center justify-start bg-[#000814] text-white font-[Jacques_Francois_Shadow] overflow-hidden relative">
+      
+      {/* Background Effects */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#000d1f] via-[#001831] to-[#000814] opacity-95" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,102,255,0.25)_0%,rgba(0,0,0,0.9)_70%)]" />
 
-      {question ? (
-        <img
-          src={question}
-          alt="Heart Puzzle"
-          className="w-72 h-72 object-contain mb-6 border border-white/20 rounded-xl shadow-lg"
-        />
-      ) : (
-        <p className="text-gray-400 mb-6">Loading puzzle...</p>
-      )}
-
-      <form onSubmit={handleSubmit} className="flex flex-col items-center gap-4">
-        <input
-          type="text"
-          value={answer}
-          onChange={(e) => setAnswer(e.target.value)}
-          placeholder="Enter your answer"
-          className="w-48 text-center py-2 rounded-md bg-white/10 border border-white/20 text-white text-lg focus:outline-none focus:ring-2 focus:ring-cyan-400"
-        />
-        <button
-          type="submit"
-          className="py-2 px-6 rounded-md border border-cyan-400 hover:bg-cyan-400 hover:text-black transition-all"
+      {/* Main Container */}
+      <div className="relative w-full max-w-3xl mt-20 mb-10 bg-white/5 border border-white/10 backdrop-blur-md rounded-3xl shadow-[0_0_35px_rgba(0,200,255,0.25)] px-8 py-12 text-center z-10">
+        
+        <h1
+          className="text-4xl mb-10 tracking-widest text-white"
+          style={{
+            textShadow:
+              "0 0 15px rgba(255,255,255,0.9), 0 0 25px rgba(0,204,255,0.5)",
+          }}
         >
-          Submit
+          CipherCore Hint
+        </h1>
+
+        {/* Puzzle Image */}
+        {question ? (
+          <img
+            src={question}
+            alt="Puzzle"
+            className="mx-auto w-72 h-72 object-contain mb-10 rounded-xl border border-white/20 shadow-[0_0_25px_rgba(0,200,255,0.25)]"
+          />
+        ) : (
+          <p className="text-gray-300 mb-10">Loading puzzle...</p>
+        )}
+
+        {/* Answer Form */}
+        <form onSubmit={handleSubmit} className="flex flex-col items-center gap-4">
+          <input
+            type="text"
+            value={answer}
+            onChange={(e) => setAnswer(e.target.value)}
+            placeholder="Enter your answer"
+            className="w-48 text-center py-2 rounded-md bg-white/10 border border-white/20 text-white text-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 tracking-widest"
+          />
+
+          <button
+            type="submit"
+            className="w-40 py-2 rounded-md border border-cyan-400 text-cyan-300 hover:bg-cyan-400 hover:text-black transition-all duration-300 tracking-widest shadow-[0_0_15px_rgba(0,200,255,0.25)]"
+          >
+            SUBMIT
+          </button>
+        </form>
+
+        {message && (
+          <p className="mt-4 text-cyan-300 text-sm tracking-wide">{message}</p>
+        )}
+
+        <button
+          onClick={() => navigate("/game")}
+          className="mt-10 text-sm text-gray-400 underline hover:text-cyan-300 transition"
+        >
+          Back to Game
         </button>
-      </form>
+      </div>
 
-      {message && <p className="mt-4 text-cyan-300 text-sm">{message}</p>}
-
-      <button
-        onClick={() => navigate("/game")}
-        className="mt-10 text-sm text-gray-400 underline"
-      >
-        Back to Game
-      </button>
+      <p className="text-xs text-gray-500 mt-6 mb-6">© 2025 CipherCore</p>
     </div>
   );
 };

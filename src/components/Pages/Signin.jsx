@@ -50,74 +50,84 @@ const Signin = () => {
   };
 
 
-  return (
-    <form className="relative min-h-screen flex flex-col items-center justify-center w-full bg-[#000814] text-white font-[Jacques_Francois_Shadow] overflow-hidden">
-      <Layout>
-        <h1
-          className="text-4xl mb-10 tracking-widest"
-          style={{
-            textShadow:
-              "0 0 6px rgba(255,255,255,0.8), 0 0 16px rgba(0,204,255,0.4)",
-          }}
+return (
+  <div className="relative min-h-screen w-full flex flex-col items-center justify-center bg-[#000814] text-white font-[Jacques_Francois_Shadow] overflow-hidden">
+
+    {/* Background layers */}
+    <div className="absolute inset-0 bg-gradient-to-b from-[#001122] via-[#000a18] to-black opacity-90" />
+    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,180,255,0.25)_0%,rgba(0,0,0,0.95)_70%)] pointer-events-none" />
+
+    {/* TITLE */}
+    <h1 className="text-5xl tracking-[0.3em] mt-10 z-20 drop-shadow-[0_0_15px_#00eaff]">
+      SIGN UP
+    </h1>
+
+    {/* FORM WRAPPER */}
+    <form
+      onSubmit={handleSignup}
+      className="relative z-20 w-full max-w-[90%] md:max-w-[450px] mt-10 bg-white/5 border border-white/10 p-8 rounded-2xl backdrop-blur-xl shadow-[0_0_25px_rgba(0,255,255,0.15)] flex flex-col items-center"
+    >
+
+      {/* Username */}
+      <input
+        type="text"
+        placeholder="Username"
+        value={username}
+        onChange={(e) => setUsername(e.target.value)}
+        className="w-full px-4 py-3 mb-5 bg-transparent border border-[#00bfff] rounded-md text-white placeholder-gray-400 text-lg tracking-wider focus:outline-none focus:shadow-[0_0_10px_#00eaff]"
+        required
+      />
+
+      {/* Email */}
+      <input
+        type="email"
+        placeholder="Email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        className="w-full px-4 py-3 mb-5 bg-transparent border border-[#00bfff] rounded-md text-white placeholder-gray-400 text-lg tracking-wider focus:outline-none focus:shadow-[0_0_10px_#00eaff]"
+        required
+      />
+
+      {/* Password */}
+      <input
+        type="password"
+        placeholder="Password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        className="w-full px-4 py-3 mb-6 bg-transparent border border-[#00bfff] rounded-md text-white placeholder-gray-400 text-lg tracking-wider focus:outline-none focus:shadow-[0_0_10px_#00eaff]"
+        required
+      />
+
+      {/* CREATE ACCOUNT BUTTON */}
+      <button
+        type="button"
+        onClick={handleSignup}
+        className="w-full py-3 text-xl tracking-widest border border-[#00eaff] rounded-md text-white text-center transition-all duration-300 hover:bg-[#00eaff] hover:text-black hover:shadow-[0_0_15px_#00eaff]"
+      >
+        CREATE ACCOUNT
+      </button>
+
+      {/* MENU BUTTON */}
+      <div className="flex flex-col w-full mt-8">
+        <Link
+          to="/MainMenu"
+          className="w-full py-3 text-xl tracking-widest border border-[#00bfff] rounded-md text-center text-white transition-all duration-300 hover:shadow-[0_0_15px_#00bfff,0_0_25px_#00bfff] hover:border-[#00ffff]"
         >
-          Sign Up
-        </h1>
+          MENU
+        </Link>
+      </div>
 
-        <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          className="w-64 px-4 py-2 mb-4 bg-transparent border border-[#00bfff] rounded-md text-white placeholder-gray-400 focus:outline-none"
-          required
-        />
-
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-64 px-4 py-2 mb-4 bg-transparent border border-[#00bfff] rounded-md text-white placeholder-gray-400 focus:outline-none"
-          required
-        />
-
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-64 px-4 py-2 mb-6 bg-transparent border border-[#00bfff] rounded-md text-white placeholder-gray-400 focus:outline-none"
-          required
-        />
-
-        <button
-          type="button"
-          onClick={handleSignup}
-          className="w-64 py-2 text-center border border-[#00bfff] rounded-md text-white tracking-widest transition-all duration-300 hover:shadow-[0_0_15px_#00bfff]"
-        >
-          CREATE ACCOUNT
-        </button>
-
-       <div className="flex flex-col md:flex-row gap-4 mt-8 w-full justify-center">
-          <Link
-            to="/MainMenu"
-            className="flex-1 py-2 text-lg tracking-widest border border-[#00bfff] rounded-md text-white text-center transition-all duration-300 hover:shadow-[0_0_10px_#00bfff,0_0_20px_#00bfff] hover:border-[#00ffff]"
-          >
-            MENU
-          </Link>
-       </div>
-
-        
-
-        <p className="mt-6 text-sm text-gray-400">
-          Already have an account?{" "}
-          <Link to="/login" className="text-[#00bfff] hover:underline">
-            Login
-          </Link>
-        </p>
-      </Layout>
+      {/* LOGIN LINK */}
+      <p className="mt-6 text-sm text-gray-400">
+        Already have an account?{" "}
+        <Link to="/login" className="text-[#00eaff] hover:underline">
+          Login
+        </Link>
+      </p>
     </form>
-  );
+  </div>
+);
+
 };
 
 export default Signin;
