@@ -3,11 +3,9 @@
 // Import your local audio files
 import clickSfx from "./Sound/Mouse Click Sound Effect.mp3";
 import errorSfx from "./Sound/Wrong Buzzer - Sound Effect.mp3";
-
-// Optional: if you add more, import them here
+import bgMusic from "./Sound/background.mp3";
 // import correctSfx from "./Sound/correct.m4a";
 // import loginSfx from "./Sound/login.m4a";
-// import bgMusic from "./Sound/background.m4a";
 
 class SoundManager {
   constructor() {
@@ -22,7 +20,7 @@ class SoundManager {
       error: errorSfx,
       // correct: correctSfx,
       // login: loginSfx,
-      // background: bgMusic,
+      background: bgMusic,
     };
   }
 

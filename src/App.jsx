@@ -6,18 +6,22 @@ import Signin from "./components/Pages/Signin";
 import Leaderboard from "./components/Pages/LeaderBoard";
 import Game from "./components/Pages/GameUI";
 import HintPage from "./components/Pages/HintPage";
+import AudioProvider from "./utils/AudioProvider";
 
 const App = () => {
   return (
-    <Routes>
-      <Route path="/" element={<MainMenu />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/signin" element={<Signin />} />
-      <Route path="/leaderboard" element={<Leaderboard />} />
-      <Route path="/game" element={<Game />} />
-      <Route path="/hint" element={<HintPage />} />
-      <Route path="/MainMenu" element={<MainMenu />} />
-    </Routes>
+    <>
+      <AudioProvider />
+      <Routes>
+        <Route path="/" element={<MainMenu />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signin" element={<Signin />} />
+        <Route path="/leaderboard" element={<Leaderboard />} />
+        <Route path="/game" element={<Game />} />
+        <Route path="/hint" element={<HintPage />} />
+        <Route path="/MainMenu" element={<MainMenu />} />
+      </Routes>
+    </>
   );
 };
 
